@@ -140,7 +140,9 @@ export default function MessageBubble({ message, index }) {
                       },
                     }}
                   >
-                    {content}
+                    {typeof content === 'string'
+                      ? content
+                      : JSON.stringify(content)}
                   </ReactMarkdown>
                 </ErrorBoundary>
               ) : (
