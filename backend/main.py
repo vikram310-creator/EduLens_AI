@@ -8,22 +8,29 @@ from routes.sessions import router as sessions_router
 
 load_dotenv()
 
-app = FastAPI(title="Groq Chat API", version="1.0.0")
+app = FastAPI(title="GroqChat API", version="1.0.0")
+
+# Allow both localhost dev and deployed Netlify frontend
+origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://edulens-ai.netlify.app",
+    # Also allow any Netlify preview deploy URLs
+    "https://*.netlify.app",
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # 🔥 TEMP FIX (for debugging)
+    allow_origins=origins,
+    allow_origin_regex=r"https://.*\.netlify\.app",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 app.include_router(chat_router, prefix="/api")
 app.include_router(sessions_router, prefix="/api")
-
-@app.get("/")
-async def root():
-    return {"message": "EduLens AI backend running 🚀"}
 
 @app.on_event("startup")
 async def startup():
