@@ -40,3 +40,22 @@ async def startup():
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+@app.get("/health/groq")
+async def health_groq():
+    """Visit https://edulens-ai-1.onrender.com/health/groq to verify GROQ_API_KEY is working."""
+    import os
+    from groq import AsyncGroq
+    key = os.environ.get("GROQ_API_KEY", "")
+    if not key:
+        return {"status": "error", "reason": "GROQ_API_KEY env var is NOT set on Render"}
+    try:
+        client = AsyncGroq(api_key=key)
+        resp = await client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": "Say OK"}],
+            max_tokens=5,
+        )
+        return {"status": "ok", "groq_response": resp.choices[0].message.content}
+    except Exception as e:
+        return {"status": "error", "reason": str(e)}
