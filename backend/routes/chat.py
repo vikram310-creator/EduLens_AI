@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session as DBSession
 from pydantic import BaseModel
+from typing import List, Optional
 from groq import AsyncGroq
 from database.db import get_db
 from models.models import Session, Message
@@ -18,10 +19,15 @@ SYSTEM_PROMPTS = {
     "analyst": "You are a data analyst and business strategist. Provide structured analysis, insights, and data-driven recommendations.",
 }
 
+class ImageInput(BaseModel):
+    data_url: str
+    media_type: str
+
 class ChatRequest(BaseModel):
     session_id: str
     message: str
     model: str = "llama-3.1-8b-instant"
+    images: Optional[List[ImageInput]] = []  # ✅ Accept images field from frontend
 
 @router.post("/chat/stream")
 async def chat_stream(req: ChatRequest, db: DBSession = Depends(get_db)):
