@@ -1,9 +1,6 @@
 import { create } from 'zustand'
-import api from '../utils/api'
+import api, { BASE_URL } from '../utils/api'
 
-console.log("SEND MESSAGE TRIGGERED")
-
-// Throttle streaming so tokens render visibly (~30ms between batches)
 const STREAM_DELAY_MS = 28
 
 export const useChatStore = create((set, get) => ({
@@ -36,9 +33,7 @@ export const useChatStore = create((set, get) => ({
 
   renameSession: async (id, title) => {
     await api.patch(`/sessions/${id}`, { title })
-    set((s) => ({
-      sessions: s.sessions.map((sess) => sess.id === id ? { ...sess, title } : sess)
-    }))
+    set((s) => ({ sessions: s.sessions.map((sess) => sess.id === id ? { ...sess, title } : sess) }))
   },
 
   deleteSession: async (id) => {
@@ -54,151 +49,119 @@ export const useChatStore = create((set, get) => ({
   },
 
   sendMessage: async (content, images = []) => {
-    let { activeSessionId, model } = get()   // ✅ must be let
-
-    // 🔥 Ensure session exists
-    if (!activeSessionId) {
-      console.log("No session → creating one...")
-
-      const session = await get().createSession()
-
-      if (!session || !session.id) {
-        console.error("Session creation failed")
-        return
-      }
-
-      activeSessionId = session.id   // ✅ IMPORTANT FIX
-      set({ activeSessionId })
-    }
+    const { activeSessionId, model } = get()
+    if (!activeSessionId) return
 
     const userMsg = {
       id: Date.now(),
       role: 'user',
-      content,
-      images,
-      created_at: new Date().toISOString()
+      content: content || '',
+      _images: images,
+      created_at: new Date().toISOString(),
     }
-
-    set((s) => ({
-      messages: [...s.messages, userMsg],
-      isStreaming: true,
-      streamingContent: ''
-    }))
+    set((s) => ({ messages: [...s.messages, userMsg], isStreaming: true, streamingContent: '' }))
 
     try {
-      const response = await fetch(`https://edulens-ai-1.onrender.com/api/chat/stream`, {
+      // Use absolute URL in production, relative in dev
+      const streamUrl = `${BASE_URL}/api/chat/stream`
+
+      const response = await fetch(streamUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          session_id: activeSessionId,  // ✅ now correct
+          session_id: activeSessionId,
           message: content,
-          model
+          model,
+          images: images.map((img) => ({ data_url: img.dataUrl, media_type: img.mediaType })),
         }),
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const err = await response.json().catch(() => ({ detail: 'Request failed' }))
+        set((s) => ({
+          messages: [...s.messages, {
+            id: Date.now(), role: 'assistant',
+            content: `⚠️ Error: ${err.detail || 'Something went wrong'}`,
+            token_count: 0, created_at: new Date().toISOString(),
+          }],
+          isStreaming: false, streamingContent: '',
+        }))
+        return
       }
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
-
       let buffer = ''
-      let tokenQueue = []
-      let rendering = false
+      const state = { queue: [], rendering: false, stopped: false, doneEvent: null }
 
-      const STREAM_DELAY_MS = 20
-
-      // 🔥 Smooth streaming effect
       const drip = () => {
-        rendering = true
-
+        state.rendering = true
         const flush = () => {
-          if (tokenQueue.length === 0) {
-            rendering = false
+          if (state.stopped) { state.rendering = false; return }
+          if (state.queue.length === 0) {
+            state.rendering = false
+            if (state.doneEvent) finalize(state.doneEvent)
             return
           }
-
-          const batch = tokenQueue.splice(0, 3).join('')
-          set((s) => ({
-            streamingContent: s.streamingContent + batch
-          }))
-
+          const batch = state.queue.splice(0, 3).join('')
+          set((s) => ({ streamingContent: s.streamingContent + batch }))
           setTimeout(flush, STREAM_DELAY_MS)
         }
-
         flush()
       }
 
-      // 🔥 STREAM READER
+      const finalize = (event) => {
+        if (state.stopped) return
+        state.stopped = true
+        const finalContent = get().streamingContent
+        set((s) => ({
+          messages: [...s.messages, {
+            id: event.message_id,
+            role: 'assistant',
+            content: finalContent || '',
+            token_count: event.tokens || 0,
+            created_at: new Date().toISOString(),
+          }],
+          streamingContent: '',
+          isStreaming: false,
+          totalTokens: event.tokens || 0,
+        }))
+        get().loadSessions()
+      }
+
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-
         buffer += decoder.decode(value, { stream: true })
-
-        const parts = buffer.split('\n\n')
-        buffer = parts.pop()
-
-        for (const part of parts) {
-          if (!part.startsWith('data:')) continue
-
+        const lines = buffer.split('\n')
+        buffer = lines.pop()
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
           try {
-            const jsonStr = part.replace(/^data:\s*/, '')
-            const event = JSON.parse(jsonStr)
-
-            // 🔹 TOKEN STREAM
+            const event = JSON.parse(line.slice(6))
             if (event.type === 'token') {
-              for (const ch of event.content) tokenQueue.push(ch)
-              if (!rendering) drip()
+              for (const ch of event.content) state.queue.push(ch)
+              if (!state.rendering) drip()
+            } else if (event.type === 'done') {
+              if (state.rendering || state.queue.length > 0) state.doneEvent = event
+              else finalize(event)
+            } else if (event.type === 'error') {
+              state.stopped = true
+              set((s) => ({
+                messages: [...s.messages, {
+                  id: Date.now(), role: 'assistant',
+                  content: `⚠️ ${event.content}`,
+                  token_count: 0, created_at: new Date().toISOString(),
+                }],
+                isStreaming: false, streamingContent: '',
+              }))
             }
-
-            // 🔹 DONE EVENT
-            else if (event.type === 'done') {
-              const waitForDrip = () => {
-                if (tokenQueue.length > 0 || rendering) {
-                  setTimeout(waitForDrip, 50)
-                  return
-                }
-
-                const finalContent = get().streamingContent
-
-                const assistantMsg = {
-                  id: event.message_id,
-                  role: 'assistant',
-                  content: finalContent,
-                  token_count: event.tokens,
-                  created_at: new Date().toISOString(),
-                }
-
-                set((s) => ({
-                  messages: [...s.messages, assistantMsg],
-                  streamingContent: '',
-                  isStreaming: false,
-                  totalTokens: event.tokens,
-                }))
-
-                setTimeout(() => get().loadSessions(), 100)
-              }
-
-              waitForDrip()
-            }
-
-            // 🔹 ERROR EVENT
-            else if (event.type === 'error') {
-              console.error("Stream error:", event)
-              set({ isStreaming: false, streamingContent: '' })
-            }
-
-          } catch (e) {
-            console.error('Parse error:', e, part)
-          }
+          } catch {}
         }
       }
-
     } catch (err) {
-      console.error("Fetch error:", err)
       set({ isStreaming: false, streamingContent: '' })
+      console.error('Stream error:', err)
     }
   },
 
