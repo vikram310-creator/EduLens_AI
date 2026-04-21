@@ -12,7 +12,7 @@ app = FastAPI(title="Groq Chat API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "https://edulens-ai.netlify.app"],
+    allow_origins=["*"],   # 🔥 TEMP FIX (for debugging)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
