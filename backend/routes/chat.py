@@ -55,11 +55,18 @@ async def chat_stream(req: ChatRequest, db: DBSession = Depends(get_db)):
     model = req.model
 
     async def generate():
+        import asyncio
         client = AsyncGroq(api_key=os.environ.get("GROQ_API_KEY"))
         full_response = ""
         total_tokens = 0
 
         try:
+            # FIX: Send an SSE comment as a keepalive BEFORE the Groq call.
+            # Render (and most reverse proxies) close idle connections after ~30s.
+            # An SSE comment (": keepalive") is ignored by EventSource but resets
+            # the proxy's idle timer, preventing the "stuck at generating" hang.
+            yield ": keepalive\n\n"
+
             stream = await client.chat.completions.create(
                 model=model,
                 messages=[{"role": "system", "content": system_text}] + history,
@@ -67,6 +74,7 @@ async def chat_stream(req: ChatRequest, db: DBSession = Depends(get_db)):
                 max_tokens=4096,
             )
 
+            last_ping = asyncio.get_event_loop().time()
             async for chunk in stream:
                 delta = chunk.choices[0].delta.content or ""
                 if delta:
@@ -75,6 +83,12 @@ async def chat_stream(req: ChatRequest, db: DBSession = Depends(get_db)):
 
                 if hasattr(chunk, 'usage') and chunk.usage:
                     total_tokens = chunk.usage.total_tokens
+
+                # Send a keepalive ping every 15 seconds between chunks
+                now = asyncio.get_event_loop().time()
+                if now - last_ping > 15:
+                    yield ": keepalive\n\n"
+                    last_ping = now
 
             from database.db import SessionLocal
             save_db = SessionLocal()

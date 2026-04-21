@@ -10,19 +10,20 @@ load_dotenv()
 
 app = FastAPI(title="GroqChat API", version="1.0.0")
 
-# Allow both localhost dev and deployed Netlify frontend
+# FIX: Don't mix wildcard pattern strings in allow_origins — use allow_origin_regex only.
+# Mixing "https://*.netlify.app" (glob, not supported) with allow_credentials=True
+# causes browsers to reject CORS preflight responses.
 origins = [
     "http://localhost:5173",
     "http://localhost:3000",
     "https://edulens-ai.netlify.app",
-    "https://edulens-ai0.netlify.app",  # ✅ Add this new line
-    "https://*.netlify.app",
+    "https://edulens-ai0.netlify.app",
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"https://.*\.netlify\.app",
+    allow_origin_regex=r"https://.*\.netlify\.app",  # handles all *.netlify.app
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
