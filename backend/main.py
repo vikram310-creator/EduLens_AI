@@ -15,7 +15,7 @@ origins = [
     "http://localhost:5173",
     "http://localhost:3000",
     "https://edulens-ai.netlify.app",
-    # Also allow any Netlify preview deploy URLs
+    "https://edulens-ai0.netlify.app",  # ✅ Add this new line
     "https://*.netlify.app",
 ]
 
