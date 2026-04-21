@@ -43,12 +43,21 @@ export default function StreamingBubble({ content }) {
                           <div className="h-2.5 w-2.5 rounded-full bg-[#febc2e]/70" />
                           <div className="h-2.5 w-2.5 rounded-full bg-[#28c840]/70" />
                         </div>
-                        <span className="font-mono text-[11px] font-500 uppercase tracking-wide text-white/25">{language}</span>
+                        <span className="font-mono text-[11px] font-500 uppercase tracking-wide text-white/25">
+                          {language}
+                        </span>
                       </div>
                       <SyntaxHighlighter
                         language={language}
                         style={oneDark}
-                        customStyle={{ margin:0, background:'#0e0e18', fontSize:'0.775rem', fontFamily:"'JetBrains Mono',monospace", padding:'1.1rem 1.25rem', lineHeight:'1.65' }}
+                        customStyle={{
+                          margin: 0,
+                          background: '#0e0e18',
+                          fontSize: '0.775rem',
+                          fontFamily: "'JetBrains Mono', monospace",
+                          padding: '1.1rem 1.25rem',
+                          lineHeight: '1.65'
+                        }}
                         PreTag="div"
                       >
                         {String(children).trimEnd()}
@@ -58,7 +67,9 @@ export default function StreamingBubble({ content }) {
                 },
               }}
             >
-              {content}
+              {typeof content === 'string'
+                ? content
+                : JSON.stringify(content)}
             </ReactMarkdown>
           </ErrorBoundary>
         </div>
