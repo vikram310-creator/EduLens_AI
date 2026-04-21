@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import api from '../utils/api'
 
 console.log("SEND MESSAGE TRIGGERED")
+
 // Throttle streaming so tokens render visibly (~30ms between batches)
 const STREAM_DELAY_MS = 28
 
@@ -53,41 +54,89 @@ export const useChatStore = create((set, get) => ({
   },
 
   sendMessage: async (content, images = []) => {
-    const { activeSessionId, model } = get()
-    if (!activeSessionId) return
+    let { activeSessionId, model } = get()   // ✅ must be let
 
-    const userMsg = { id: Date.now(), role: 'user', content, images, created_at: new Date().toISOString() }
-    set((s) => ({ messages: [...s.messages, userMsg], isStreaming: true, streamingContent: '' }))
+    // 🔥 Ensure session exists
+    if (!activeSessionId) {
+      console.log("No session → creating one...")
+
+      const session = await get().createSession()
+
+      if (!session || !session.id) {
+        console.error("Session creation failed")
+        return
+      }
+
+      activeSessionId = session.id   // ✅ IMPORTANT FIX
+      set({ activeSessionId })
+    }
+
+    const userMsg = {
+      id: Date.now(),
+      role: 'user',
+      content,
+      images,
+      created_at: new Date().toISOString()
+    }
+
+    set((s) => ({
+      messages: [...s.messages, userMsg],
+      isStreaming: true,
+      streamingContent: ''
+    }))
 
     try {
       const response = await fetch(`https://edulens-ai-1.onrender.com/api/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: activeSessionId, message: content, model }),
+        body: JSON.stringify({
+          session_id: activeSessionId,  // ✅ now correct
+          message: content,
+          model
+        }),
       })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
+
       let buffer = ''
       let tokenQueue = []
       let rendering = false
 
-      // Drip tokens out with a small delay for visible streaming effect
+      const STREAM_DELAY_MS = 20
+
+      // 🔥 Smooth streaming effect
       const drip = () => {
         rendering = true
+
         const flush = () => {
-          if (tokenQueue.length === 0) { rendering = false; return }
-          const batch = tokenQueue.splice(0, 3).join('')  // render 3 chars at a time
-          set((s) => ({ streamingContent: s.streamingContent + batch }))
+          if (tokenQueue.length === 0) {
+            rendering = false
+            return
+          }
+
+          const batch = tokenQueue.splice(0, 3).join('')
+          set((s) => ({
+            streamingContent: s.streamingContent + batch
+          }))
+
           setTimeout(flush, STREAM_DELAY_MS)
         }
+
         flush()
       }
 
+      // 🔥 STREAM READER
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
+
         buffer += decoder.decode(value, { stream: true })
+
         const parts = buffer.split('\n\n')
         buffer = parts.pop()
 
@@ -98,11 +147,13 @@ export const useChatStore = create((set, get) => ({
             const jsonStr = part.replace(/^data:\s*/, '')
             const event = JSON.parse(jsonStr)
 
+            // 🔹 TOKEN STREAM
             if (event.type === 'token') {
               for (const ch of event.content) tokenQueue.push(ch)
               if (!rendering) drip()
             }
 
+            // 🔹 DONE EVENT
             else if (event.type === 'done') {
               const waitForDrip = () => {
                 if (tokenQueue.length > 0 || rendering) {
@@ -133,7 +184,9 @@ export const useChatStore = create((set, get) => ({
               waitForDrip()
             }
 
+            // 🔹 ERROR EVENT
             else if (event.type === 'error') {
+              console.error("Stream error:", event)
               set({ isStreaming: false, streamingContent: '' })
             }
 
@@ -142,9 +195,10 @@ export const useChatStore = create((set, get) => ({
           }
         }
       }
+
     } catch (err) {
+      console.error("Fetch error:", err)
       set({ isStreaming: false, streamingContent: '' })
-      console.error(err)
     }
   },
 
