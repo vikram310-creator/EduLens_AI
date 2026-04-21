@@ -59,7 +59,7 @@ export const useChatStore = create((set, get) => ({
     set((s) => ({ messages: [...s.messages, userMsg], isStreaming: true, streamingContent: '' }))
 
     try {
-      const response = await fetch(`/api/chat/stream`, {
+      fetch(`https://edulens-ai-1.onrender.com/api/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: activeSessionId, message: content, model }),
