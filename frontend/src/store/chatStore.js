@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import api from '../utils/api'
 
+console.log("SEND MESSAGE TRIGGERED")
 // Throttle streaming so tokens render visibly (~30ms between batches)
 const STREAM_DELAY_MS = 28
 
