@@ -118,7 +118,7 @@ export const useChatStore = create((set, get) => ({
           messages: [...s.messages, {
             id: event.message_id,
             role: 'assistant',
-            content: finalContent || '',
+            content: String(finalContent || ''),
             token_count: event.tokens || 0,
             created_at: new Date().toISOString(),
           }],
@@ -140,7 +140,11 @@ export const useChatStore = create((set, get) => ({
           try {
             const event = JSON.parse(line.slice(6))
             if (event.type === 'token') {
-              for (const ch of event.content) state.queue.push(ch)
+              let token = event.content
+              if (typeof token !== 'string') {
+                token = JSON.stringify(token)
+              }
+              for (const ch of token) tokenQueue.push(ch)
               if (!state.rendering) drip()
             } else if (event.type === 'done') {
               if (state.rendering || state.queue.length > 0) state.doneEvent = event
