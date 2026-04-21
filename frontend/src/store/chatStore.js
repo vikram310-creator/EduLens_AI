@@ -144,7 +144,7 @@ export const useChatStore = create((set, get) => ({
               if (typeof token !== 'string') {
                 token = JSON.stringify(token)
               }
-              for (const ch of token) tokenQueue.push(ch)
+              for (const ch of token) state.queue.push(ch)
               if (!state.rendering) drip()
             } else if (event.type === 'done') {
               if (state.rendering || state.queue.length > 0) state.doneEvent = event
