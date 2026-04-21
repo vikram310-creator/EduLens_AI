@@ -1,7 +1,10 @@
 import axios from 'axios'
 
+// Use environment variable or fallback to Render URL
+const API_BASE_URL = process.env.VITE_API_URL || 'https://edulens-ai-1.onrender.com/'
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: `${API_BASE_URL}/api`,
   timeout: 30000,
 })
 
