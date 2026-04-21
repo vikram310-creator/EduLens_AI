@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // In production: use the deployed Render backend
 // In development: use Vite proxy (empty string = relative URL handled by vite.config.js)
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://edulens-ai-1.onrender.com'
 
 const api = axios.create({
   baseURL: `${BASE_URL}/api`,
