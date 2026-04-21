@@ -87,27 +87,31 @@ export const useChatStore = create((set, get) => ({
         const { done, value } = await reader.read()
         if (done) break
         buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop()
+        const parts = buffer.split('\n\n')
+        buffer = parts.pop()
 
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue
+        for (const part of parts) {
+          if (!part.startsWith('data: ')) continue
+
           try {
-            const event = JSON.parse(line.slice(6))
+            const event = JSON.parse(part.slice(6))
+
             if (event.type === 'token') {
-              // Push each character individually for character-level drip
               for (const ch of event.content) tokenQueue.push(ch)
               if (!rendering) drip()
-            } else if (event.type === 'done') {
+            }
+
+            else if (event.type === 'done') {
               console.log('Received done event:', event)
-              // Wait for drip queue to finish before finalizing
+
               const waitForDrip = () => {
                 if (tokenQueue.length > 0 || rendering) {
                   setTimeout(waitForDrip, 50)
                   return
                 }
+
                 const finalContent = get().streamingContent
-                console.log('Finalizing message with content length:', finalContent.length)
+
                 const assistantMsg = {
                   id: event.message_id,
                   role: 'assistant',
@@ -115,21 +119,26 @@ export const useChatStore = create((set, get) => ({
                   token_count: event.tokens,
                   created_at: new Date().toISOString(),
                 }
+
                 set((s) => ({
                   messages: [...s.messages, assistantMsg],
                   streamingContent: '',
                   isStreaming: false,
                   totalTokens: event.tokens,
                 }))
-                // Defer so it doesn't cascade into the same render cycle
+
                 setTimeout(() => get().loadSessions(), 100)
               }
+
               waitForDrip()
-            } else if (event.type === 'error') {
+            }
+
+            else if (event.type === 'error') {
               set({ isStreaming: false, streamingContent: '' })
             }
+
           } catch (e) {
-            console.error('Failed to parse SSE event:', e, line)
+            console.error('Failed to parse SSE event:', e, part)
           }
         }
       }
