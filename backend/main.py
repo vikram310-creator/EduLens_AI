@@ -12,7 +12,7 @@ app = FastAPI(title="Groq Chat API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:5173", "http://localhost:3000", "https://edulens-ai.netlify.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -20,6 +20,10 @@ app.add_middleware(
 
 app.include_router(chat_router, prefix="/api")
 app.include_router(sessions_router, prefix="/api")
+
+@app.get("/")
+async def root():
+    return {"message": "EduLens AI backend running 🚀"}
 
 @app.on_event("startup")
 async def startup():
