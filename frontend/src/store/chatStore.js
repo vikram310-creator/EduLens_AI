@@ -91,10 +91,11 @@ export const useChatStore = create((set, get) => ({
         buffer = parts.pop()
 
         for (const part of parts) {
-          if (!part.startsWith('data: ')) continue
+          if (!part.startsWith('data:')) continue
 
           try {
-            const event = JSON.parse(part.slice(6))
+            const jsonStr = part.replace(/^data:\s*/, '')
+            const event = JSON.parse(jsonStr)
 
             if (event.type === 'token') {
               for (const ch of event.content) tokenQueue.push(ch)
@@ -102,8 +103,6 @@ export const useChatStore = create((set, get) => ({
             }
 
             else if (event.type === 'done') {
-              console.log('Received done event:', event)
-
               const waitForDrip = () => {
                 if (tokenQueue.length > 0 || rendering) {
                   setTimeout(waitForDrip, 50)
@@ -138,7 +137,7 @@ export const useChatStore = create((set, get) => ({
             }
 
           } catch (e) {
-            console.error('Failed to parse SSE event:', e, part)
+            console.error('Parse error:', e, part)
           }
         }
       }
