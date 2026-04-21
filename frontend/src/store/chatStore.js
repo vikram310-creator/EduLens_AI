@@ -154,8 +154,9 @@ export const useChatStore = create((set, get) => ({
               for (const ch of token) state.queue.push(ch)
               if (!state.rendering) drip()
             } else if (event.type === 'done') {
-              if (state.rendering || state.queue.length > 0) state.doneEvent = event
-              else finalize(event)
+              // FIX: Always store doneEvent; if drip already finished call finalize now
+              state.doneEvent = event
+              if (!state.rendering && state.queue.length === 0) finalize(event)
             } else if (event.type === 'error') {
               state.stopped = true
               set((s) => ({
@@ -168,6 +169,26 @@ export const useChatStore = create((set, get) => ({
               }))
             }
           } catch {}
+        }
+      }
+
+      // FIX: Stream closed (done=true). If we never got a 'done' SSE event,
+      // isStreaming would stay true forever - the core cause of the hang.
+      if (!state.stopped) {
+        const partial = get().streamingContent
+        if (partial) {
+          // Got tokens but no 'done' event - finalize what we have
+          finalize({ tokens: 0, message_id: Date.now() })
+        } else if (!state.doneEvent) {
+          // Stream closed with no data at all - show diagnostic message
+          set((s) => ({
+            messages: [...s.messages, {
+              id: Date.now(), role: 'assistant',
+              content: 'Stream closed with no response. Make sure GROQ_API_KEY is set in Render environment variables.',
+              token_count: 0, created_at: new Date().toISOString(),
+            }],
+            isStreaming: false, streamingContent: '',
+          }))
         }
       }
     } catch (err) {
