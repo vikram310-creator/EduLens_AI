@@ -61,6 +61,12 @@ export const useChatStore = create((set, get) => ({
     }
     set((s) => ({ messages: [...s.messages, userMsg], isStreaming: true, streamingContent: '' }))
 
+    // FIX: Use an AbortController with a timeout so the fetch never hangs
+    // indefinitely when Render's proxy silently drops the SSE connection.
+    const controller = new AbortController()
+    // 90s total timeout — generous enough for long responses, short enough to recover
+    const streamTimeout = setTimeout(() => controller.abort(), 90_000)
+
     try {
       // Use absolute URL in production, relative in dev
       const streamUrl = `${BASE_URL}/api/chat/stream`
@@ -68,6 +74,7 @@ export const useChatStore = create((set, get) => ({
       const response = await fetch(streamUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           session_id: activeSessionId,
           message: content,
@@ -164,8 +171,34 @@ export const useChatStore = create((set, get) => ({
         }
       }
     } catch (err) {
-      set({ isStreaming: false, streamingContent: '' })
+      clearTimeout(streamTimeout)
+      const isTimeout = err.name === 'AbortError'
+      const partialContent = get().streamingContent
+      if (partialContent) {
+        // Finalize whatever we received before the connection dropped
+        set((s) => ({
+          messages: [...s.messages, {
+            id: Date.now(), role: 'assistant',
+            content: partialContent + (isTimeout ? '\n\n⚠️ Response timed out.' : ''),
+            token_count: 0, created_at: new Date().toISOString(),
+          }],
+          isStreaming: false, streamingContent: '',
+        }))
+      } else {
+        set((s) => ({
+          messages: [...s.messages, {
+            id: Date.now(), role: 'assistant',
+            content: isTimeout
+              ? '⚠️ Request timed out — the server may be starting up (Render cold start takes ~30s). Please try again.'
+              : `⚠️ Connection error: ${err.message}`,
+            token_count: 0, created_at: new Date().toISOString(),
+          }],
+          isStreaming: false, streamingContent: '',
+        }))
+      }
       console.error('Stream error:', err)
+    } finally {
+      clearTimeout(streamTimeout)
     }
   },
 
