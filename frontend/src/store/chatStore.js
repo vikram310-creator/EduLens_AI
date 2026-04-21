@@ -16,7 +16,7 @@ export const useChatStore = create((set, get) => ({
 
   loadSessions: async () => {
     const { data } = await api.get('/sessions')
-    set({ sessions: data })
+    set({ sessions: Array.isArray(data) ? data : data.sessions || [] })
   },
 
   createSession: async (systemPrompt = 'assistant') => {
@@ -28,7 +28,7 @@ export const useChatStore = create((set, get) => ({
   setActiveSession: async (id) => {
     set({ activeSessionId: id, messages: [], streamingContent: '' })
     const { data } = await api.get(`/chat/${id}/messages`)
-    set({ messages: data })
+    set({ messages: Array.isArray(data) ? data : data.messages || [] })
   },
 
   renameSession: async (id, title) => {
@@ -44,7 +44,7 @@ export const useChatStore = create((set, get) => ({
     set({ sessions: remaining, activeSessionId: next, messages: next ? get().messages : [] })
     if (next && activeSessionId === id) {
       const { data } = await api.get(`/chat/${next}/messages`)
-      set({ messages: data })
+      set({ messages: Array.isArray(data) ? data : data.messages || [] })
     }
   },
 
