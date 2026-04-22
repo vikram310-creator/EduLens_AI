@@ -142,21 +142,47 @@ export default function MessageBubble({ message, index }) {
       {/* Content */}
       <div className={`flex min-w-0 max-w-[80%] flex-col gap-2 ${isUser ? 'items-end' : 'items-start'}`}>
         {isUser ? (
-          <div className="rounded-2xl rounded-tr-sm bg-gradient-to-br from-violet-600/30 to-indigo-700/25 px-4 py-3 text-sm leading-relaxed text-white/90 border border-violet-500/20 shadow-lg shadow-violet-900/10">
-            {/* Attached images */}
+          <div className="rounded-2xl rounded-tr-sm text-sm leading-relaxed text-white/90 shadow-lg shadow-violet-900/10 overflow-hidden"
+               style={{ border: '1px solid rgba(139,92,246,0.2)' }}>
+
+            {/* Attached images grid — shown above the text */}
             {message.images && message.images.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-2">
+              <div className={`p-2 ${message.images.length > 1 ? 'grid grid-cols-2 gap-1.5' : ''}`}
+                   style={{ background: 'rgba(99,60,180,0.18)' }}>
                 {message.images.map((img, i) => (
-                  <img
-                    key={i}
-                    src={img.dataUrl || img}
-                    alt={img.name || 'attachment'}
-                    className="max-h-40 max-w-[200px] rounded-lg border border-white/10 object-cover shadow"
-                  />
+                  <div key={i} className="group relative overflow-hidden"
+                       style={{ borderRadius: '10px', aspectRatio: '4/3' }}>
+                    <img
+                      src={img.dataUrl || img}
+                      alt={img.name || `image ${i + 1}`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      className="transition-transform duration-200 group-hover:scale-105"
+                    />
+                    {/* subtle gradient at bottom */}
+                    <div style={{
+                      position: 'absolute', bottom: 0, left: 0, right: 0, height: '36px',
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.45), transparent)',
+                      borderRadius: '0 0 10px 10px'
+                    }} />
+                    {/* filename on hover */}
+                    {img.name && (
+                      <span className="absolute bottom-1.5 left-2 text-white/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                            style={{ fontSize: '9px', fontWeight: 500 }}>
+                        {img.name}
+                      </span>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
-            {content && <p className="whitespace-pre-wrap">{content}</p>}
+
+            {/* Text content */}
+            {content && (
+              <div className="px-4 py-3 whitespace-pre-wrap"
+                   style={{ background: 'linear-gradient(135deg, rgba(99,60,180,0.22), rgba(67,44,140,0.18))' }}>
+                {content}
+              </div>
+            )}
           </div>
         ) : (
           <div className="relative w-full">
