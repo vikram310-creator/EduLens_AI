@@ -15,12 +15,11 @@ export default function Sidebar() {
   const [editTitle, setEditTitle] = useState('')
   const [hoveredId, setHoveredId] = useState(null)
 
-  // Only confirmed working free-tier Groq models
+  // Free-tier Groq models — last entry supports vision (image+text input)
   const MODELS = [
     { value: 'llama-3.1-8b-instant', label: 'LLaMA 3.1 8B', tag: 'Fast' },
     { value: 'llama-3.3-70b-versatile', label: 'LLaMA 3.3 70B', tag: 'Smart' },
-    { value: 'llama3-groq-8b-8192-tool-use-preview', label: 'LLaMA Groq 8B', tag: 'Tools' },
-    { value: 'gemma2-9b-it', label: 'Gemma 2 9B', tag: 'Lean' },
+    { value: 'meta-llama/llama-4-scout-17b-16e-instruct', label: 'Llama 4 Scout', tag: 'Vision' },
   ]
 
   const startEdit = (s, e) => {
