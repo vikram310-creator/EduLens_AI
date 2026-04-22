@@ -79,7 +79,7 @@ export const useChatStore = create((set, get) => ({
           session_id: activeSessionId,
           message: content,
           model,
-          images: images.map((img) => ({ data_url: img.dataUrl, media_type: img.mediaType })),
+          images: images.map((img) => ({ data_url: img.dataUrl, media_type: img.type || img.mediaType || 'image/jpeg' })),
         }),
       })
 
@@ -185,7 +185,7 @@ export const useChatStore = create((set, get) => ({
               set((s) => ({
                 messages: [...s.messages, {
                   id: Date.now(), role: 'assistant',
-                  content: 'Error: ' + event.content,
+                  content: 'Error: ' + (typeof event.content === 'string' ? event.content : JSON.stringify(event.content)),
                   token_count: 0, created_at: new Date().toISOString(),
                 }],
                 isStreaming: false, streamingContent: '',
