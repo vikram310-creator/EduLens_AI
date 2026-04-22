@@ -56,7 +56,7 @@ export const useChatStore = create((set, get) => ({
       id: Date.now(),
       role: 'user',
       content: content || '',
-      _images: images,
+      images: images,   // stored as 'images' so MessageBubble can render them
       created_at: new Date().toISOString(),
     }
     set((s) => ({ messages: [...s.messages, userMsg], isStreaming: true, streamingContent: '' }))
