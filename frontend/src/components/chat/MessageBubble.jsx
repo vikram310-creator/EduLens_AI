@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { Copy, Check, Zap } from 'lucide-react'
+import { Copy, Check, Zap, X, ZoomIn } from 'lucide-react'
 import ErrorBoundary from '../ErrorBoundary'
 
 const LANG_META = {
@@ -110,6 +110,7 @@ function CodeBlock({ children, className }) {
 export default function MessageBubble({ message, index }) {
   const isUser = message.role === 'user'
   const [copied, setCopied] = useState(false)
+  const [lightbox, setLightbox] = useState(null) // { src, name }
 
   // ✅ SAFETY GUARD — never pass undefined/null to ReactMarkdown
   const content = message?.content ?? ''
@@ -150,21 +151,31 @@ export default function MessageBubble({ message, index }) {
               <div className={`p-2 ${message.images.length > 1 ? 'grid grid-cols-2 gap-1.5' : ''}`}
                    style={{ background: 'rgba(99,60,180,0.18)' }}>
                 {message.images.map((img, i) => (
-                  <div key={i} className="group relative overflow-hidden"
-                       style={{ borderRadius: '10px', aspectRatio: '4/3' }}>
+                  <div key={i}
+                    className="group relative overflow-hidden cursor-zoom-in"
+                    style={{ borderRadius: '10px', aspectRatio: '4/3' }}
+                    onClick={() => setLightbox({ src: img.dataUrl || img, name: img.name || `Image ${i + 1}` })}
+                  >
                     <img
                       src={img.dataUrl || img}
                       alt={img.name || `image ${i + 1}`}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                       className="transition-transform duration-200 group-hover:scale-105"
                     />
-                    {/* subtle gradient at bottom */}
+                    {/* Zoom icon on hover */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                         style={{ background: 'rgba(0,0,0,0.35)', borderRadius: '10px' }}>
+                      <div className="flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm"
+                           style={{ width: '36px', height: '36px' }}>
+                        <ZoomIn size={16} className="text-white" />
+                      </div>
+                    </div>
+                    {/* gradient + filename */}
                     <div style={{
                       position: 'absolute', bottom: 0, left: 0, right: 0, height: '36px',
-                      background: 'linear-gradient(to top, rgba(0,0,0,0.45), transparent)',
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.5), transparent)',
                       borderRadius: '0 0 10px 10px'
                     }} />
-                    {/* filename on hover */}
                     {img.name && (
                       <span className="absolute bottom-1.5 left-2 text-white/70 opacity-0 group-hover:opacity-100 transition-opacity"
                             style={{ fontSize: '9px', fontWeight: 500 }}>
@@ -175,6 +186,62 @@ export default function MessageBubble({ message, index }) {
                 ))}
               </div>
             )}
+
+            {/* Lightbox */}
+            <AnimatePresence>
+              {lightbox && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                  className="fixed inset-0 z-50 flex items-center justify-center"
+                  style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(8px)' }}
+                  onClick={() => setLightbox(null)}
+                >
+                  <motion.div
+                    initial={{ scale: 0.88, opacity: 0, y: 16 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.88, opacity: 0, y: 16 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 26 }}
+                    className="relative flex flex-col items-center"
+                    style={{ maxWidth: '90vw', maxHeight: '90vh' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Close button */}
+                    <button
+                      onClick={() => setLightbox(null)}
+                      className="absolute -top-3 -right-3 z-10 flex items-center justify-center rounded-full border border-white/15 bg-[#1c1c2e] text-white/60 hover:bg-white/10 hover:text-white transition-all shadow-xl"
+                      style={{ width: '32px', height: '32px' }}
+                    >
+                      <X size={14} />
+                    </button>
+
+                    {/* Image */}
+                    <img
+                      src={lightbox.src}
+                      alt={lightbox.name}
+                      style={{
+                        maxWidth: '88vw',
+                        maxHeight: '82vh',
+                        objectFit: 'contain',
+                        borderRadius: '14px',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
+                        display: 'block',
+                      }}
+                    />
+
+                    {/* Filename bar */}
+                    <div className="mt-3 flex items-center gap-2 rounded-lg px-3 py-1.5"
+                         style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <span className="text-white/50" style={{ fontSize: '11px' }}>{lightbox.name}</span>
+                      <span className="text-white/20" style={{ fontSize: '10px' }}>· click outside to close</span>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Text content */}
             {content && (
