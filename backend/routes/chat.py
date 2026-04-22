@@ -45,6 +45,7 @@ async def chat_stream(req: ChatRequest, db: DBSession = Depends(get_db)):
         session.title = title
         db.commit()
 
+    # Build history — all previous messages as plain text
     history = [
         {"role": m.role, "content": m.content}
         for m in db.query(Message).filter(Message.session_id == session.id).order_by(Message.created_at).all()
@@ -53,6 +54,8 @@ async def chat_stream(req: ChatRequest, db: DBSession = Depends(get_db)):
     system_text = SYSTEM_PROMPTS.get(session.system_prompt, SYSTEM_PROMPTS["assistant"])
     session_id = session.id
     model = req.model
+    # Capture images now while we still have the request object
+    req_images = req.images or []
 
     async def generate():
         import asyncio
@@ -61,15 +64,29 @@ async def chat_stream(req: ChatRequest, db: DBSession = Depends(get_db)):
         total_tokens = 0
 
         try:
-            # FIX: Send an SSE comment as a keepalive BEFORE the Groq call.
-            # Render (and most reverse proxies) close idle connections after ~30s.
-            # An SSE comment (": keepalive") is ignored by EventSource but resets
-            # the proxy's idle timer, preventing the "stuck at generating" hang.
             yield ": keepalive\n\n"
+
+            # Build the current user message — add images if provided
+            # Groq vision models expect content as a list with image_url blocks
+            if req_images:
+                user_content = [{"type": "text", "text": history[-1]["content"]}]
+                for img in req_images:
+                    user_content.append({
+                        "type": "image_url",
+                        "image_url": {"url": img.data_url}
+                    })
+                # Replace last history entry (user msg) with the multimodal version
+                messages_to_send = (
+                    [{"role": "system", "content": system_text}]
+                    + history[:-1]
+                    + [{"role": "user", "content": user_content}]
+                )
+            else:
+                messages_to_send = [{"role": "system", "content": system_text}] + history
 
             stream = await client.chat.completions.create(
                 model=model,
-                messages=[{"role": "system", "content": system_text}] + history,
+                messages=messages_to_send,
                 stream=True,
                 max_tokens=4096,
             )
