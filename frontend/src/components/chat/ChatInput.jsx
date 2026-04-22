@@ -2,12 +2,14 @@ import { useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mic, Square, ArrowUp, Paperclip, X, Image } from 'lucide-react'
 import { useChatStore } from '../../store/chatStore'
+
+const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
 import { useVoiceInput } from '../../hooks/useVoiceInput'
 
 export default function ChatInput() {
   const [input, setInput] = useState('')
   const [attachedImages, setAttachedImages] = useState([])
-  const { sendMessage, isStreaming } = useChatStore()
+  const { sendMessage, isStreaming, setModel } = useChatStore()
   const textareaRef = useRef(null)
   const fileInputRef = useRef(null)
 
@@ -39,8 +41,10 @@ export default function ChatInput() {
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files)
+    let hasNew = false
     files.forEach((file) => {
       if (!file.type.startsWith('image/')) return
+      hasNew = true
       const reader = new FileReader()
       reader.onload = (ev) => {
         setAttachedImages((prev) => [
@@ -50,6 +54,8 @@ export default function ChatInput() {
       }
       reader.readAsDataURL(file)
     })
+    // Auto-switch to vision model when images are attached
+    if (hasNew) setModel(VISION_MODEL)
     e.target.value = ''
   }
 
@@ -62,37 +68,50 @@ export default function ChatInput() {
     <div className="px-4 pb-5 pt-2">
       <div className="mx-auto max-w-2xl">
 
-        {/* Image previews */}
+        {/* Image previews — full-size with filename + remove */}
         <AnimatePresence>
           {attachedImages.length > 0 && (
             <motion.div
               initial={{ opacity: 0, height: 0, marginBottom: 0 }}
               animate={{ opacity: 1, height: 'auto', marginBottom: 10 }}
               exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-              className="flex flex-wrap gap-2 overflow-hidden"
+              className="flex flex-wrap gap-3 overflow-hidden"
             >
               {attachedImages.map((img) => (
                 <motion.div
                   key={img.id}
-                  initial={{ opacity: 0, scale: 0.85 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="relative group"
+                  initial={{ opacity: 0, scale: 0.88, y: 6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.84, y: 4 }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+                  className="group relative flex flex-col gap-1"
                 >
-                  <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-white/10 bg-[#111118] shadow-lg shadow-black/30">
+                  {/* Image thumbnail — larger, with zoom overlay */}
+                  <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0e0e18] shadow-xl shadow-black/40"
+                       style={{ width: '96px', height: '80px' }}>
                     <img
                       src={img.dataUrl}
                       alt={img.name}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-150" />
+                    {/* Dark overlay on hover */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-all duration-150 rounded-xl" />
+                    {/* Vision badge */}
+                    <div className="absolute bottom-1.5 left-1.5 rounded-md bg-violet-600/80 px-1.5 py-0.5 text-[9px] font-600 text-white backdrop-blur-sm">
+                      Vision
+                    </div>
                   </div>
+                  {/* Filename */}
+                  <span className="max-w-[96px] truncate text-[10px] text-white/30 text-center">
+                    {img.name}
+                  </span>
+                  {/* Remove button */}
                   <button
                     onClick={() => removeImage(img.id)}
-                    className="absolute -top-1.5 -right-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full border border-white/15 bg-[#1a1a26] text-white/60 hover:text-white transition-all shadow-lg opacity-0 group-hover:opacity-100"
-                    style={{ width: '18px', height: '18px' }}
+                    className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full border border-white/12 bg-[#1c1c28] text-white/50 hover:bg-red-500/80 hover:text-white hover:border-red-400/50 transition-all shadow-lg"
+                    style={{ width: '20px', height: '20px' }}
                   >
-                    <X size={9} />
+                    <X size={10} />
                   </button>
                 </motion.div>
               ))}

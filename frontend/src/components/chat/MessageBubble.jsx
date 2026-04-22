@@ -3,15 +3,36 @@ import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Copy, Check, Zap } from 'lucide-react'
 import ErrorBoundary from '../ErrorBoundary'
 
-/* ── Code block ── */
+const LANG_META = {
+  python:     { color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', label: 'Python' },
+  javascript: { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', label: 'JavaScript' },
+  typescript: { color: '#38bdf8', bg: 'rgba(56,189,248,0.12)', label: 'TypeScript' },
+  jsx:        { color: '#61dafb', bg: 'rgba(97,218,251,0.12)', label: 'JSX' },
+  tsx:        { color: '#38bdf8', bg: 'rgba(56,189,248,0.12)', label: 'TSX' },
+  css:        { color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', label: 'CSS' },
+  html:       { color: '#fb923c', bg: 'rgba(251,146,60,0.12)',  label: 'HTML' },
+  bash:       { color: '#4ade80', bg: 'rgba(74,222,128,0.12)',  label: 'Bash' },
+  sh:         { color: '#4ade80', bg: 'rgba(74,222,128,0.12)',  label: 'Shell' },
+  json:       { color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', label: 'JSON' },
+  sql:        { color: '#67e8f9', bg: 'rgba(103,232,249,0.12)', label: 'SQL' },
+  rust:       { color: '#fb923c', bg: 'rgba(251,146,60,0.12)',  label: 'Rust' },
+  go:         { color: '#34d399', bg: 'rgba(52,211,153,0.12)',  label: 'Go' },
+  java:       { color: '#f87171', bg: 'rgba(248,113,113,0.12)', label: 'Java' },
+  cpp:        { color: '#c084fc', bg: 'rgba(192,132,252,0.12)', label: 'C++' },
+  c:          { color: '#c084fc', bg: 'rgba(192,132,252,0.12)', label: 'C' },
+  text:       { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', label: 'Text' },
+}
+/* ── Pro Code Block ── */
 function CodeBlock({ children, className }) {
   const [copied, setCopied] = useState(false)
-  const language = className?.replace('language-', '') || 'text'
+  const rawLang = (className?.replace('language-', '') || 'text').toLowerCase()
+  const meta = LANG_META[rawLang] || { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', label: rawLang.toUpperCase() }
   const code = String(children).trimEnd()
+  const lineCount = code.split('\n').length
 
   const copy = () => {
     navigator.clipboard.writeText(code)
@@ -20,39 +41,62 @@ function CodeBlock({ children, className }) {
   }
 
   return (
-    <div className="my-4 overflow-hidden rounded-xl border border-white/8 shadow-2xl shadow-black/40">
-      <div className="flex items-center justify-between border-b border-white/6 bg-[#13131e] px-4 py-2.5">
+    <div className="group/code my-4 overflow-hidden rounded-2xl shadow-2xl shadow-black/60"
+         style={{ border: '1px solid rgba(255,255,255,0.07)', background: '#0a0a12' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-2.5"
+           style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-3">
+          {/* Traffic lights */}
           <div className="flex gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]/70" />
-            <div className="h-2.5 w-2.5 rounded-full bg-[#febc2e]/70" />
-            <div className="h-2.5 w-2.5 rounded-full bg-[#28c840]/70" />
+            <div className="h-2.5 w-2.5 rounded-full" style={{ background: '#ff5f57' }} />
+            <div className="h-2.5 w-2.5 rounded-full" style={{ background: '#febc2e' }} />
+            <div className="h-2.5 w-2.5 rounded-full" style={{ background: '#28c840' }} />
           </div>
-          <span className="font-mono text-[11px] tracking-wide text-white/25 uppercase">{language}</span>
+          {/* Language badge */}
+          <span className="rounded-md px-2 py-0.5 font-mono text-[10px] font-600 tracking-wider uppercase"
+                style={{ color: meta.color, background: meta.bg, border: `1px solid ${meta.color}22` }}>
+            {meta.label}
+          </span>
+          {/* Line count */}
+          <span className="text-[10px] text-white/18 font-mono">
+            {lineCount} {lineCount === 1 ? 'line' : 'lines'}
+          </span>
         </div>
-        <button
-          onClick={copy}
-          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] text-white/30 transition-all hover:bg-white/8 hover:text-white/80"
-        >
+        {/* Copy button */}
+        <button onClick={copy}
+          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-500 transition-all duration-150"
+          style={copied
+            ? { color: '#4ade80', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)' }
+            : { color: 'rgba(255,255,255,0.28)', background: 'transparent', border: '1px solid transparent' }}>
           {copied
-            ? <span className="flex items-center gap-1.5 text-emerald-400"><Check size={10} /> Copied!</span>
-            : <span className="flex items-center gap-1.5"><Copy size={10} /> Copy</span>
-          }
+            ? <><Check size={10} /> Copied!</>
+            : <><Copy size={10} /> Copy</>}
         </button>
       </div>
+      {/* Code */}
       <SyntaxHighlighter
-        language={language}
-        style={oneDark}
+        language={rawLang}
+        style={vscDarkPlus}
         customStyle={{
           margin: 0,
-          background: '#0e0e18',
-          fontSize: '0.775rem',
-          fontFamily: "'JetBrains Mono', monospace",
-          padding: '1.1rem 1.25rem',
-          lineHeight: '1.65',
+          background: '#0a0a12',
+          fontSize: '0.78rem',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          padding: '1.15rem 1.25rem',
+          lineHeight: '1.7',
+          borderRadius: 0,
         }}
-        showLineNumbers={code.split('\n').length > 6}
-        lineNumberStyle={{ color: 'rgba(255,255,255,0.12)', fontSize: '0.7rem', marginRight: '0.75rem', userSelect: 'none' }}
+        showLineNumbers={lineCount > 4}
+        lineNumberStyle={{
+          color: 'rgba(255,255,255,0.1)',
+          fontSize: '0.68rem',
+          paddingRight: '1.25rem',
+          minWidth: '2.5rem',
+          userSelect: 'none',
+          fontStyle: 'normal',
+        }}
+        wrapLongLines={false}
         PreTag="div"
       >
         {code}
@@ -60,6 +104,7 @@ function CodeBlock({ children, className }) {
     </div>
   )
 }
+
 
 /* ── Main bubble ── */
 export default function MessageBubble({ message, index }) {
