@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, MessageSquare, Trash2, Pencil, Check, X, Download, ChevronLeft, ChevronRight, Zap, Cpu } from 'lucide-react'
 import { useChatStore } from '../../store/chatStore'
 
-export default function Sidebar() {
+// onNavigate: called on mobile after a session is selected / new chat created
+// so the parent can close the drawer
+export default function Sidebar({ onNavigate }) {
   const {
     sessions, activeSessionId, createSession,
     setActiveSession, renameSession, deleteSession,
@@ -15,11 +17,10 @@ export default function Sidebar() {
   const [editTitle, setEditTitle] = useState('')
   const [hoveredId, setHoveredId] = useState(null)
 
-  // Free-tier Groq models — last entry supports vision (image+text input)
   const MODELS = [
-    { value: 'llama-3.1-8b-instant', label: 'LLaMA 3.1 8B', tag: 'Fast' },
-    { value: 'llama-3.3-70b-versatile', label: 'LLaMA 3.3 70B', tag: 'Smart' },
-    { value: 'meta-llama/llama-4-scout-17b-16e-instruct', label: 'Llama 4 Scout', tag: 'Vision' },
+    { value: 'llama-3.1-8b-instant',                        label: 'LLaMA 3.1 8B',  tag: 'Fast'   },
+    { value: 'llama-3.3-70b-versatile',                     label: 'LLaMA 3.3 70B', tag: 'Smart'  },
+    { value: 'meta-llama/llama-4-scout-17b-16e-instruct',   label: 'Llama 4 Scout', tag: 'Vision' },
   ]
 
   const startEdit = (s, e) => {
@@ -35,12 +36,23 @@ export default function Sidebar() {
 
   const cancelEdit = () => setEditingId(null)
 
+  const handleNewChat = async () => {
+    await createSession('assistant')
+    onNavigate?.()   // close drawer on mobile
+  }
+
+  const handleSelectSession = (id) => {
+    if (editingId) return
+    setActiveSession(id)
+    onNavigate?.()   // close drawer on mobile
+  }
+
   const PERSONA_COLORS = {
     assistant: 'bg-violet-500/20 text-violet-300',
-    coder: 'bg-blue-500/20 text-blue-300',
-    teacher: 'bg-emerald-500/20 text-emerald-300',
-    writer: 'bg-amber-500/20 text-amber-300',
-    analyst: 'bg-rose-500/20 text-rose-300',
+    coder:     'bg-blue-500/20 text-blue-300',
+    teacher:   'bg-emerald-500/20 text-emerald-300',
+    writer:    'bg-amber-500/20 text-amber-300',
+    analyst:   'bg-rose-500/20 text-rose-300',
   }
 
   return (
@@ -81,7 +93,7 @@ export default function Sidebar() {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
-          onClick={() => createSession('assistant')}
+          onClick={handleNewChat}
           className={`flex w-full items-center rounded-xl border border-violet-500/25 bg-gradient-to-r from-violet-600/20 to-indigo-600/15 px-3 py-2.5 text-violet-300 transition hover:from-violet-600/30 hover:to-indigo-600/25 ${collapsed ? 'justify-center' : 'gap-2.5'}`}
         >
           <Plus size={14} strokeWidth={2.5} />
@@ -125,14 +137,13 @@ export default function Sidebar() {
               exit={{ opacity: 0, x: -8 }}
               onHoverStart={() => setHoveredId(s.id)}
               onHoverEnd={() => setHoveredId(null)}
-              onClick={() => !editingId && setActiveSession(s.id)}
+              onClick={() => handleSelectSession(s.id)}
               className={`group relative flex cursor-pointer items-center rounded-xl px-2.5 py-2 transition-all duration-150 ${
                 activeSessionId === s.id
                   ? 'bg-white/7 text-white'
                   : 'text-white/40 hover:bg-white/4 hover:text-white/70'
               } ${collapsed ? 'justify-center gap-0' : 'gap-2.5'}`}
             >
-              {/* Active indicator */}
               {activeSessionId === s.id && (
                 <motion.div
                   layoutId="active-indicator"
@@ -223,7 +234,6 @@ export default function Sidebar() {
             exit={{ opacity: 0 }}
             className="border-t border-white/5 p-3 flex flex-col gap-3"
           >
-            {/* Model selector */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-1.5 px-0.5">
                 <Cpu size={10} className="text-white/25" />

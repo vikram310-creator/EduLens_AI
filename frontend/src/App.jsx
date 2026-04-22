@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from './components/sidebar/Sidebar'
 import ChatPage from './pages/ChatPage'
@@ -14,8 +14,11 @@ const PERSONAS = [
 
 export default function App() {
   const { loadSessions, activeSessionId, createSession } = useChatStore()
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   useEffect(() => { loadSessions() }, [])
+
+  const closeMobileSidebar = () => setMobileSidebarOpen(false)
 
   return (
     <div className="noise flex h-screen w-screen overflow-hidden" style={{ background: '#080810' }}>
@@ -25,9 +28,44 @@ export default function App() {
         <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-indigo-900/6 blur-[100px]" />
       </div>
 
-      <Sidebar />
+      {/* Desktop sidebar — always visible md+ */}
+      <div className="hidden md:flex h-full flex-shrink-0">
+        <Sidebar />
+      </div>
 
-      <main className="relative flex flex-1 flex-col overflow-hidden">
+      {/* Mobile backdrop */}
+      <AnimatePresence>
+        {mobileSidebarOpen && (
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"
+            onClick={closeMobileSidebar}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Mobile sidebar drawer */}
+      <AnimatePresence>
+        {mobileSidebarOpen && (
+          <motion.div
+            key="mobile-sidebar"
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+            className="fixed inset-y-0 left-0 z-40 md:hidden"
+            style={{ width: '268px' }}
+          >
+            <Sidebar onNavigate={closeMobileSidebar} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <main className="relative flex flex-1 flex-col overflow-hidden min-w-0">
         <AnimatePresence>
           {activeSessionId ? (
             <motion.div
@@ -38,7 +76,7 @@ export default function App() {
               transition={{ duration: 0.15 }}
               className="absolute inset-0 flex flex-col"
             >
-              <ChatPage />
+              <ChatPage onMenuOpen={() => setMobileSidebarOpen(true)} />
             </motion.div>
           ) : (
             <motion.div
@@ -49,6 +87,17 @@ export default function App() {
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               className="absolute inset-0 flex flex-col items-center justify-center px-6"
             >
+              {/* Mobile menu button on welcome screen */}
+              <button
+                onClick={() => setMobileSidebarOpen(true)}
+                className="absolute top-4 left-4 md:hidden flex h-9 w-9 items-center justify-center rounded-xl border border-white/8 bg-white/4 text-white/50 hover:bg-white/8 hover:text-white transition"
+                aria-label="Open menu"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+
               <div className="flex w-full max-w-lg flex-col items-center gap-10">
                 {/* Hero */}
                 <div className="text-center">

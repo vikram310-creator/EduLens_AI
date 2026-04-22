@@ -18,6 +18,11 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body, #root { height: 100%; width: 100%; overflow: hidden; }
+
+/* Mobile viewport fix — prevent address bar resize bounce */
+@supports (height: 100dvh) {
+  html, body, #root { height: 100dvh; }
+}
 body {
   background: #080810;
   font-family: 'DM Sans', system-ui, sans-serif;
@@ -121,3 +126,16 @@ body {
 }
 
 .img-preview-enter { animation: imgPreviewIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+/* Mobile touch & safe-area fixes */
+button, [role="button"] {
+  touch-action: manipulation;   /* eliminates 300ms tap delay on mobile */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure chat input stays above the mobile keyboard */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-safe-bottom {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+}

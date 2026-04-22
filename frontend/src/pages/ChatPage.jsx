@@ -15,7 +15,7 @@ const SUGGESTIONS = [
   { icon: '✍️', text: 'Help me write a cover letter' },
 ]
 
-export default function ChatPage() {
+export default function ChatPage({ onMenuOpen }) {
   const { messages, isStreaming, streamingContent, activeSessionId, sessions, totalTokens, sendMessage } = useChatStore()
   const bottomRef = useRef(null)
 
@@ -28,7 +28,7 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <ChatHeader session={session} totalTokens={totalTokens} />
+      <ChatHeader session={session} totalTokens={totalTokens} onMenuOpen={onMenuOpen} />
 
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex max-w-2xl flex-col gap-7 px-5 py-8">

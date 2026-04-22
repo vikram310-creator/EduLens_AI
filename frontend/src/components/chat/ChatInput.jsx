@@ -64,7 +64,7 @@ export default function ChatInput() {
   const hasInput = input.length > 0
 
   return (
-    <div className="px-4 pb-5 pt-2">
+    <div className="px-4 pb-5 pt-2 mobile-safe-bottom">
       <div className="mx-auto max-w-2xl">
 
         <AnimatePresence>
