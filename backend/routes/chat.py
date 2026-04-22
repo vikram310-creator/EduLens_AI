@@ -66,23 +66,30 @@ async def chat_stream(req: ChatRequest, db: DBSession = Depends(get_db)):
         try:
             yield ": keepalive\n\n"
 
-            # Build the current user message — add images if provided
-            # Groq vision models expect content as a list with image_url blocks
+            # Groq rule: ALL history entries must have string content.
+            # Only the CURRENT (last) user message can be a list (for vision).
+            def to_str(c):
+                return c if isinstance(c, str) else str(c)
+
+            safe_history = [{"role": m["role"], "content": to_str(m["content"])} for m in history]
+
             if req_images:
-                user_content = [{"type": "text", "text": history[-1]["content"]}]
+                # Current user turn: build multimodal content list
+                user_content = [
+                    {"type": "text", "text": safe_history[-1]["content"] or "Describe this image."}
+                ]
                 for img in req_images:
                     user_content.append({
                         "type": "image_url",
                         "image_url": {"url": img.data_url}
                     })
-                # Replace last history entry (user msg) with the multimodal version
                 messages_to_send = (
                     [{"role": "system", "content": system_text}]
-                    + history[:-1]
-                    + [{"role": "user", "content": user_content}]
+                    + safe_history[:-1]          # prior turns — all plain strings
+                    + [{"role": "user", "content": user_content}]   # current turn with images
                 )
             else:
-                messages_to_send = [{"role": "system", "content": system_text}] + history
+                messages_to_send = [{"role": "system", "content": system_text}] + safe_history
 
             stream = await client.chat.completions.create(
                 model=model,
