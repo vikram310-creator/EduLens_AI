@@ -99,33 +99,20 @@ export const useChatStore = create((set, get) => ({
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
       let buffer = ''
-      const state = { queue: [], rendering: false, stopped: false, doneEvent: null }
-
-      const drip = () => {
-        state.rendering = true
-        const flush = () => {
-          if (state.stopped) { state.rendering = false; return }
-          if (state.queue.length === 0) {
-            state.rendering = false
-            if (state.doneEvent) finalize(state.doneEvent)
-            return
-          }
-          const batch = state.queue.splice(0, 3).join('')
-          set((s) => ({ streamingContent: s.streamingContent + batch }))
-          setTimeout(flush, STREAM_DELAY_MS)
-        }
-        flush()
-      }
+      // fullText accumulates ALL tokens as they arrive from the network.
+      // streamingContent in the store is what's been rendered so far (drip effect).
+      // finalize() always uses fullText so it never depends on drip timing.
+      let fullText = ''
+      let doneEvent = null
 
       const finalize = (event) => {
-        if (state.stopped) return
-        state.stopped = true
-        const finalContent = get().streamingContent
+        // Snap the final message into place using the complete text we accumulated,
+        // not whatever streamingContent managed to render before drip finished.
         set((s) => ({
           messages: [...s.messages, {
-            id: event.message_id,
+            id: event.message_id || Date.now(),
             role: 'assistant',
-            content: String(finalContent || ''),
+            content: fullText || get().streamingContent || '',
             token_count: event.tokens || 0,
             created_at: new Date().toISOString(),
           }],
@@ -134,6 +121,40 @@ export const useChatStore = create((set, get) => ({
           totalTokens: event.tokens || 0,
         }))
         get().loadSessions()
+      }
+
+      // Drip renders characters one batch at a time for the typing effect.
+      // It reads from fullText so it always has the latest content even if
+      // new tokens arrived while it was mid-render.
+      let dripPos = 0
+      let dripRunning = false
+      let dripFinished = false
+
+      const runDrip = () => {
+        if (dripRunning) return
+        dripRunning = true
+        const tick = () => {
+          // Render up to 4 chars per tick from fullText
+          const end = Math.min(dripPos + 4, fullText.length)
+          if (end > dripPos) {
+            const slice = fullText.slice(0, end)
+            dripPos = end
+            set({ streamingContent: slice })
+          }
+          if (dripPos < fullText.length) {
+            // More text to render
+            setTimeout(tick, STREAM_DELAY_MS)
+          } else if (doneEvent) {
+            // Stream finished AND drip caught up — finalize now
+            dripRunning = false
+            dripFinished = true
+            finalize(doneEvent)
+          } else {
+            // Drip caught up but stream still ongoing — wait for more tokens
+            dripRunning = false
+          }
+        }
+        tick()
       }
 
       while (true) {
@@ -148,21 +169,23 @@ export const useChatStore = create((set, get) => ({
             const event = JSON.parse(line.slice(6))
             if (event.type === 'token') {
               let token = event.content
-              if (typeof token !== 'string') {
-                token = JSON.stringify(token)
-              }
-              for (const ch of token) state.queue.push(ch)
-              if (!state.rendering) drip()
+              if (typeof token !== 'string') token = JSON.stringify(token)
+              fullText += token
+              // Restart drip if it paused waiting for more tokens
+              runDrip()
             } else if (event.type === 'done') {
-              // FIX: Always store doneEvent; if drip already finished call finalize now
-              state.doneEvent = event
-              if (!state.rendering && state.queue.length === 0) finalize(event)
+              doneEvent = event
+              // If drip already finished rendering everything, finalize immediately.
+              // Otherwise drip's tick() will call finalize when it catches up.
+              if (dripFinished || dripPos >= fullText.length) {
+                finalize(event)
+              }
             } else if (event.type === 'error') {
-              state.stopped = true
+              doneEvent = { message_id: Date.now(), tokens: 0 } // stop drip
               set((s) => ({
                 messages: [...s.messages, {
                   id: Date.now(), role: 'assistant',
-                  content: `⚠️ ${event.content}`,
+                  content: 'Error: ' + event.content,
                   token_count: 0, created_at: new Date().toISOString(),
                 }],
                 isStreaming: false, streamingContent: '',
@@ -174,13 +197,12 @@ export const useChatStore = create((set, get) => ({
 
       // FIX: Stream closed (done=true). If we never got a 'done' SSE event,
       // isStreaming would stay true forever - the core cause of the hang.
-      if (!state.stopped) {
-        const partial = get().streamingContent
-        if (partial) {
-          // Got tokens but no 'done' event - finalize what we have
+      // Stream reader finished. If we never got a 'done' SSE event, clean up.
+      if (!doneEvent) {
+        if (fullText) {
+          // Got tokens but stream closed without done event - finalize what we have
           finalize({ tokens: 0, message_id: Date.now() })
-        } else if (!state.doneEvent) {
-          // Stream closed with no data at all - show diagnostic message
+        } else {
           set((s) => ({
             messages: [...s.messages, {
               id: Date.now(), role: 'assistant',
