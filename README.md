@@ -1,4 +1,4 @@
-# ⚡ GroqChat — AI at the Speed of Thought
+# ⚡ EduLens—AI at the Speed of Thought
 
 A production-ready AI chatbot powered by **Groq API** (LLaMA3 / Mixtral) with real-time streaming, glassmorphism UI, multi-session management, and voice input.
 
