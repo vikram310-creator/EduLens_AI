@@ -1,120 +1,134 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import api from '../utils/api'
 
 const AuthContext = createContext(null)
+const THEME_KEY   = 'edulens_theme'
+const USER_KEY    = 'cached_user'
+const TOKEN_KEY   = 'token'
 
-// Persist theme in localStorage so it's applied instantly before /auth/me resolves
-const THEME_KEY = 'edulens_theme'
+// ── Read from localStorage synchronously (runs at module parse time) ─────────
+function readCache() {
+  try {
+    const token = localStorage.getItem(TOKEN_KEY)
+    const user  = localStorage.getItem(USER_KEY)
+    return {
+      token: token || null,
+      user:  user ? JSON.parse(user) : null,
+      theme: localStorage.getItem(THEME_KEY) || 'dark',
+    }
+  } catch {
+    return { token: null, user: null, theme: 'dark' }
+  }
+}
 
+function applyTheme(theme) {
+  const t = theme || 'dark'
+  document.documentElement.setAttribute('data-theme', t)
+  document.documentElement.classList.remove('theme-dark','theme-midnight','theme-ocean','theme-light')
+  document.documentElement.classList.add(`theme-${t}`)
+  localStorage.setItem(THEME_KEY, t)
+}
+
+// Apply theme instantly — before React even mounts — to avoid any flash
+const initial = readCache()
+applyTheme(initial.theme)
+
+// ─────────────────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }) {
-  const [user, setUser]         = useState(null)
-  const [loading, setLoading]   = useState(true)
+  // Initialise user from cache → renders logged-in immediately on refresh
+  const [user, setUser]         = useState(initial.user)
+  // loading = true only while we're verifying the token in the background
+  const [loading, setLoading]   = useState(!!initial.token && !initial.user)
   const [showAuth, setShowAuth] = useState(false)
   const [authIntent, setAuthIntent] = useState(null)
+  const verifyRef = useRef(false)   // prevent double-verify in React StrictMode
 
-  // Apply theme immediately on mount from cache (no flash)
+  // ── Background token verification ─────────────────────────────────────────
   useEffect(() => {
-    const cached = localStorage.getItem(THEME_KEY) || 'dark'
-    applyTheme(cached)
-  }, [])
+    if (verifyRef.current) return
+    verifyRef.current = true
 
-  // ── Bootstrap: restore session ───────────────────────────────────────────
-  useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem(TOKEN_KEY)
     if (!token) { setLoading(false); return }
 
     api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } })
       .then(({ data }) => {
+        // Server returned fresh user — update cache and state
         setUser(data)
         applyTheme(data.theme)
+        localStorage.setItem(USER_KEY, JSON.stringify(data))
         localStorage.setItem(THEME_KEY, data.theme || 'dark')
       })
       .catch((err) => {
-        // Only wipe token on explicit 401 (invalid/expired).
-        // Network errors or 5xx (cold Render start) keep the user logged in.
-        if (err.response?.status === 401) {
-          localStorage.removeItem('token')
+        const status = err.response?.status
+        if (status === 401) {
+          // Token is genuinely invalid — clear everything
+          localStorage.removeItem(TOKEN_KEY)
+          localStorage.removeItem(USER_KEY)
+          setUser(null)
         }
-        // If we still have a token, try to restore from cached user data
-        const cached = localStorage.getItem('cached_user')
-        if (cached && err.response?.status !== 401) {
-          try { setUser(JSON.parse(cached)) } catch {}
-        }
+        // Any other error (network, 500, timeout) → keep cached user, stay logged in
+        // The background verify simply failed; we'll try again next time
       })
       .finally(() => setLoading(false))
   }, [])
 
-  // ── Theme ─────────────────────────────────────────────────────────────────
-  function applyTheme(theme) {
-    const t = theme || 'dark'
-    // Set on <html> — this is what CSS [data-theme] selectors target
-    document.documentElement.setAttribute('data-theme', t)
-    // Also set a class for Tailwind dark: variant support
-    const root = document.documentElement
-    root.classList.remove('theme-dark', 'theme-midnight', 'theme-ocean', 'theme-light')
-    root.classList.add(`theme-${t}`)
-    // Persist so next load is instant
-    localStorage.setItem(THEME_KEY, t)
-  }
-
-  // ── Auth helpers ──────────────────────────────────────────────────────────
-  const saveAuth = (token, userData) => {
-    localStorage.setItem('token', token)
-    localStorage.setItem('cached_user', JSON.stringify(userData))
-    setUser(userData)
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  const persist = (token, userData) => {
+    localStorage.setItem(TOKEN_KEY, token)
+    localStorage.setItem(USER_KEY, JSON.stringify(userData))
     applyTheme(userData.theme)
+    setUser(userData)
     setShowAuth(false)
   }
 
   const register = async (email, password, name) => {
     const { data } = await api.post('/auth/register', { email, password, name })
-    saveAuth(data.token, data.user)
+    persist(data.token, data.user)
     return data.user
   }
 
   const login = async (email, password) => {
     const { data } = await api.post('/auth/login', { email, password })
-    saveAuth(data.token, data.user)
+    persist(data.token, data.user)
     return data.user
   }
 
   const loginWithGoogle = async (code) => {
     const { data } = await api.post('/auth/google/callback', { code })
-    saveAuth(data.token, data.user)
+    persist(data.token, data.user)
     return data.user
   }
 
   const logout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('cached_user')
+    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(USER_KEY)
     localStorage.removeItem(THEME_KEY)
     setUser(null)
     applyTheme('dark')
   }
 
   const updateTheme = async (theme) => {
-    // Apply immediately for instant feedback
     applyTheme(theme)
     setUser(u => {
       const updated = { ...u, theme }
-      localStorage.setItem('cached_user', JSON.stringify(updated))
+      localStorage.setItem(USER_KEY, JSON.stringify(updated))
       return updated
     })
-    // Then persist to server
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem(TOKEN_KEY)
       await api.patch('/auth/theme', { theme }, { headers: { Authorization: `Bearer ${token}` } })
     } catch (e) {
-      console.warn('Failed to save theme to server:', e.message)
+      console.warn('Theme save failed (will retry next session):', e.message)
     }
   }
 
   const updateProfile = async (name) => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem(TOKEN_KEY)
     const { data } = await api.patch('/auth/profile', { name }, { headers: { Authorization: `Bearer ${token}` } })
     setUser(u => {
       const updated = { ...u, ...data }
-      localStorage.setItem('cached_user', JSON.stringify(updated))
+      localStorage.setItem(USER_KEY, JSON.stringify(updated))
       return updated
     })
     return data
@@ -127,10 +141,7 @@ export function AuthProvider({ children }) {
     return false
   }, [user])
 
-  const onAuthSuccess = () => {
-    authIntent?.()
-    setAuthIntent(null)
-  }
+  const onAuthSuccess = () => { authIntent?.(); setAuthIntent(null) }
 
   return (
     <AuthContext.Provider value={{
