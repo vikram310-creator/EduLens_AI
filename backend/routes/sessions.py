@@ -1,11 +1,22 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session as DBSession
 from pydantic import BaseModel
 from database.db import get_db
-from models.models import Session, Message
+from models.models import Session, Message, User
+from routes.auth import decode_token
+from typing import Optional
 import uuid
 
 router = APIRouter()
+
+def get_current_user(authorization: Optional[str] = Header(None), db: DBSession = Depends(get_db)) -> User:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authentication required")
+    uid = decode_token(authorization[7:])
+    user = db.query(User).filter(User.id == uid).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user
 
 class CreateSession(BaseModel):
     system_prompt: str = "assistant"
@@ -14,8 +25,8 @@ class RenameSession(BaseModel):
     title: str
 
 @router.get("/sessions")
-def list_sessions(db: DBSession = Depends(get_db)):
-    sessions = db.query(Session).order_by(Session.updated_at.desc()).all()
+def list_sessions(user: User = Depends(get_current_user), db: DBSession = Depends(get_db)):
+    sessions = db.query(Session).filter(Session.user_id == user.id).order_by(Session.updated_at.desc()).all()
     return [
         {
             "id": s.id,
@@ -29,16 +40,16 @@ def list_sessions(db: DBSession = Depends(get_db)):
     ]
 
 @router.post("/sessions")
-def create_session(body: CreateSession, db: DBSession = Depends(get_db)):
-    session = Session(id=str(uuid.uuid4()), system_prompt=body.system_prompt)
+def create_session(body: CreateSession, user: User = Depends(get_current_user), db: DBSession = Depends(get_db)):
+    session = Session(id=str(uuid.uuid4()), user_id=user.id, system_prompt=body.system_prompt)
     db.add(session)
     db.commit()
     db.refresh(session)
     return {"id": session.id, "title": session.title, "system_prompt": session.system_prompt, "created_at": session.created_at.isoformat()}
 
 @router.patch("/sessions/{session_id}")
-def rename_session(session_id: str, body: RenameSession, db: DBSession = Depends(get_db)):
-    session = db.query(Session).filter(Session.id == session_id).first()
+def rename_session(session_id: str, body: RenameSession, user: User = Depends(get_current_user), db: DBSession = Depends(get_db)):
+    session = db.query(Session).filter(Session.id == session_id, Session.user_id == user.id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     session.title = body.title
@@ -46,8 +57,8 @@ def rename_session(session_id: str, body: RenameSession, db: DBSession = Depends
     return {"id": session.id, "title": session.title}
 
 @router.delete("/sessions/{session_id}")
-def delete_session(session_id: str, db: DBSession = Depends(get_db)):
-    session = db.query(Session).filter(Session.id == session_id).first()
+def delete_session(session_id: str, user: User = Depends(get_current_user), db: DBSession = Depends(get_db)):
+    session = db.query(Session).filter(Session.id == session_id, Session.user_id == user.id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     db.delete(session)
