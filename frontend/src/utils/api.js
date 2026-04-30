@@ -8,7 +8,7 @@ export const BASE_URL = API_BASE_URL
 
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
-  timeout: 30000,
+  timeout: 60000, // 60s — Render free tier cold starts can take 50s
 })
 
 api.interceptors.response.use(
