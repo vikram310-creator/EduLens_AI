@@ -18,6 +18,16 @@ def get_current_user(authorization: Optional[str] = Header(None), db: DBSession 
         raise HTTPException(status_code=401, detail="User not found")
     return user
 
+def get_optional_user(authorization: Optional[str] = Header(None), db: DBSession = Depends(get_db)) -> Optional[User]:
+    """Returns None instead of 401 — graceful degradation for unauthenticated requests."""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    try:
+        uid = decode_token(authorization[7:])
+        return db.query(User).filter(User.id == uid).first()
+    except Exception:
+        return None
+
 class CreateSession(BaseModel):
     system_prompt: str = "assistant"
 
@@ -25,7 +35,10 @@ class RenameSession(BaseModel):
     title: str
 
 @router.get("/sessions")
-def list_sessions(user: User = Depends(get_current_user), db: DBSession = Depends(get_db)):
+def list_sessions(user: Optional[User] = Depends(get_optional_user), db: DBSession = Depends(get_db)):
+    """Returns [] for unauthenticated requests so old frontends don't get 401 spam."""
+    if not user:
+        return []
     sessions = db.query(Session).filter(Session.user_id == user.id).order_by(Session.updated_at.desc()).all()
     return [
         {
