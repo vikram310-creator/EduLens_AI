@@ -139,3 +139,65 @@ button, [role="button"] {
     padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
 }
+
+/* ── Theme system ──────────────────────────────────────────────────────────── */
+/* Default (dark) is already :root. Only override for non-dark themes. */
+
+[data-theme="midnight"] {
+  --accent: #3b82f6;
+  --accent-mid: #2563eb;
+  --accent-soft: rgba(59,130,246,0.12);
+  --surface: #02020e;
+  --surface-2: #06061a;
+  --surface-3: #0a0a20;
+  --border: rgba(255,255,255,0.05);
+  --border-strong: rgba(255,255,255,0.09);
+  --text-1: #e8eaf6;
+  --text-2: #8fa0c8;
+  --text-3: #465070;
+}
+[data-theme="midnight"] body,
+[data-theme="midnight"] .noise { background: #000008; }
+
+[data-theme="ocean"] {
+  --accent: #0891b2;
+  --accent-mid: #0e7490;
+  --accent-soft: rgba(8,145,178,0.12);
+  --surface: #020c14;
+  --surface-2: #051827;
+  --surface-3: #071e30;
+  --border: rgba(255,255,255,0.06);
+  --border-strong: rgba(255,255,255,0.1);
+  --text-1: #e0f2fe;
+  --text-2: #7db8d0;
+  --text-3: #3d6878;
+}
+[data-theme="ocean"] body,
+[data-theme="ocean"] .noise { background: #020c14; }
+
+[data-theme="light"] {
+  --accent: #7c3aed;
+  --accent-mid: #6d28d9;
+  --accent-soft: rgba(124,58,237,0.1);
+  --surface: #f8fafc;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+  --border: rgba(0,0,0,0.07);
+  --border-strong: rgba(0,0,0,0.12);
+  --text-1: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+}
+[data-theme="light"] body,
+[data-theme="light"] .noise { background: #f8fafc; }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+
+/* Apply surface colours via CSS vars to bg utility-like helpers */
+.bg-surface   { background: var(--surface); }
+.bg-surface-2 { background: var(--surface-2); }
+.bg-surface-3 { background: var(--surface-3); }
+.border-theme { border-color: var(--border); }
+.text-theme-1 { color: var(--text-1); }
+.text-theme-2 { color: var(--text-2); }
+.text-accent  { color: var(--accent); }

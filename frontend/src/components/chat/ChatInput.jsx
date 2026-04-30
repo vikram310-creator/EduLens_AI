@@ -3,10 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Mic, Square, ArrowUp, Paperclip, X } from 'lucide-react'
 import { useChatStore } from '../../store/chatStore'
 import { useVoiceInput } from '../../hooks/useVoiceInput'
+import { useAuth } from '../../context/AuthContext'
 
 const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
 
 export default function ChatInput() {
+  const { requireAuth } = useAuth()
   const [input, setInput] = useState('')
   const [attachedImages, setAttachedImages] = useState([])
   const { sendMessage, isStreaming, setModel } = useChatStore()
@@ -23,10 +25,12 @@ export default function ChatInput() {
   const handleSend = () => {
     const trimmed = input.trim()
     if ((!trimmed && attachedImages.length === 0) || isStreaming) return
-    sendMessage(trimmed, attachedImages)
-    setInput('')
-    setAttachedImages([])
-    if (textareaRef.current) textareaRef.current.style.height = 'auto'
+    requireAuth(() => {
+      sendMessage(trimmed, attachedImages)
+      setInput('')
+      setAttachedImages([])
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
+    })
   }
 
   const handleKeyDown = (e) => {
