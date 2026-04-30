@@ -6,11 +6,11 @@ import { useAuth } from '../../context/AuthContext'
 const THEMES = [
   { id: 'dark',     label: 'Dark',     preview: ['#080810', '#0f0f1a', '#7c3aed'] },
   { id: 'midnight', label: 'Midnight', preview: ['#000008', '#050510', '#2563eb'] },
-  { id: 'ocean',    label: 'Ocean',    preview: ['#020c14', '#051827', '#0891b2'] },
-  { id: 'light',    label: 'Light',    preview: ['#f8fafc', '#f1f5f9', '#7c3aed'] },
+  { id: 'ocean',    label: 'Ocean',    preview: ['#020c14', '#051827', '#06b6d4'] },
+  { id: 'light',    label: 'Light',    preview: ['#f5f5f8', '#ffffff',  '#7c3aed'] },
 ]
 
-export default function ProfileDropdown() {
+export default function ProfileDropdown({ compact = false }) {
   const { user, logout, updateTheme } = useAuth()
   const [open, setOpen]             = useState(false)
   const [showThemes, setShowThemes] = useState(false)
@@ -18,7 +18,12 @@ export default function ProfileDropdown() {
   const ref = useRef(null)
 
   useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false)
+        setShowThemes(false)
+      }
+    }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
@@ -37,30 +42,37 @@ export default function ProfileDropdown() {
 
   return (
     <div className="relative" ref={ref}>
-      {/* Trigger */}
+      {/* ── Trigger button ───────────────────────────────────────────────── */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-white/6 group"
+        className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition"
         style={{ color: 'var(--text-2)' }}
+        onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-3)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
       >
         <Avatar user={user} initials={initials} size={28} />
-        <span className="hidden sm:block text-xs font-medium max-w-[90px] truncate transition group-hover:opacity-100"
-          style={{ color: 'var(--text-2)' }}>
-          {user.name || user.email.split('@')[0]}
-        </span>
-        <ChevronDown size={12} className={`transition-transform opacity-50 ${open ? 'rotate-180' : ''}`} />
+        {!compact && (
+          <span className="hidden sm:block text-xs font-medium max-w-[90px] truncate"
+            style={{ color: 'var(--text-2)' }}>
+            {user.name || user.email.split('@')[0]}
+          </span>
+        )}
+        <ChevronDown size={12}
+          className={`transition-transform`}
+          style={{ opacity: 0.4, transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }} />
       </button>
 
+      {/* ── Dropdown card ────────────────────────────────────────────────── */}
       <AnimatePresence>
         {open && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -6 }}
-            transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="dropdown-card absolute right-0 top-full mt-2 w-64 rounded-2xl overflow-hidden z-50"
+            transition={{ duration: 0.14, ease: [0.22, 1, 0.36, 1] }}
+            className="dropdown-card absolute right-0 top-full mt-2 w-64 rounded-2xl overflow-hidden z-[100]"
           >
-            {/* User info header */}
+            {/* User info */}
             <div className="p-4" style={{ borderBottom: '1px solid var(--border)' }}>
               <div className="flex items-center gap-3">
                 <Avatar user={user} initials={initials} size={40} />
@@ -79,16 +91,17 @@ export default function ProfileDropdown() {
               </div>
             </div>
 
-            {/* Menu items */}
+            {/* Menu */}
             <div className="p-2">
-              {/* Appearance toggle */}
+              {/* Appearance */}
               <button
                 onClick={() => setShowThemes(s => !s)}
-                className="dropdown-item w-full"
+                className="dropdown-item"
               >
-                <Palette size={14} style={{ color: 'var(--text-3)' }} />
-                <span className="flex-1 text-left">Appearance</span>
-                <ChevronDown size={12} className={`transition-transform opacity-40 ${showThemes ? 'rotate-180' : ''}`} />
+                <Palette size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+                <span className="flex-1">Appearance</span>
+                <ChevronDown size={12}
+                  style={{ opacity: 0.4, transform: showThemes ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
               </button>
 
               {/* Theme grid */}
@@ -102,7 +115,7 @@ export default function ProfileDropdown() {
                   >
                     <div className="grid grid-cols-2 gap-1.5 px-1 pb-1 pt-1.5">
                       {THEMES.map(t => {
-                        const isActive = user.theme === t.id
+                        const isActive = (user.theme || 'dark') === t.id
                         return (
                           <button
                             key={t.id}
@@ -110,11 +123,10 @@ export default function ProfileDropdown() {
                             disabled={saving}
                             className={`theme-btn ${isActive ? 'active' : ''} disabled:opacity-50`}
                           >
-                            {/* Colour dots */}
                             <div className="flex gap-1 mb-1">
                               {t.preview.map((c, i) => (
                                 <div key={i} className="h-3 w-3 rounded-full"
-                                  style={{ background: c, border: '1px solid rgba(128,128,128,0.25)' }} />
+                                  style={{ background: c, border: '1px solid rgba(128,128,128,0.2)' }} />
                               ))}
                             </div>
                             <div className="flex items-center justify-between">
@@ -133,9 +145,9 @@ export default function ProfileDropdown() {
 
               <button
                 onClick={() => { logout(); setOpen(false) }}
-                className="dropdown-item dropdown-item-danger w-full"
+                className="dropdown-item dropdown-item-danger"
               >
-                <LogOut size={14} />
+                <LogOut size={14} style={{ flexShrink: 0 }} />
                 Sign out
               </button>
             </div>
@@ -149,17 +161,23 @@ export default function ProfileDropdown() {
 export function Avatar({ user, initials, size = 32 }) {
   if (user?.avatar_url) {
     return (
-      <img src={user.avatar_url} alt={user.name || 'Avatar'} referrerPolicy="no-referrer"
-        style={{ width: size, height: size, border: '1px solid var(--border)' }}
-        className="rounded-full object-cover flex-shrink-0" />
+      <img
+        src={user.avatar_url}
+        alt={user.name || 'Avatar'}
+        referrerPolicy="no-referrer"
+        style={{ width: size, height: size, border: '1px solid var(--border)', flexShrink: 0 }}
+        className="rounded-full object-cover"
+      />
     )
   }
   return (
     <div
-      style={{ width: size, height: size, fontSize: size * 0.38,
+      style={{
+        width: size, height: size, fontSize: size * 0.38, flexShrink: 0,
         background: 'linear-gradient(135deg, var(--accent), var(--accent-mid))',
-        border: '1px solid var(--border)' }}
-      className="flex-shrink-0 flex items-center justify-center rounded-full font-bold text-white select-none"
+        border: '1px solid var(--border)',
+      }}
+      className="flex items-center justify-center rounded-full font-bold text-white select-none"
     >
       {initials}
     </div>

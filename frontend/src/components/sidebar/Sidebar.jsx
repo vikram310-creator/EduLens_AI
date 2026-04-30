@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, MessageSquare, Trash2, Pencil, Check, X, Download, ChevronLeft, ChevronRight, Zap, Cpu } from 'lucide-react'
 import { useChatStore } from '../../store/chatStore'
 import { useAuth } from '../../context/AuthContext'
-import { Avatar } from '../auth/ProfileDropdown'
+import ProfileDropdown from '../auth/ProfileDropdown'
 
 // onNavigate: called on mobile after a session is selected / new chat created
 // so the parent can close the drawer
@@ -273,14 +273,10 @@ export default function Sidebar({ onNavigate }) {
               </button>
             )}
 
-            {/* User strip */}
-            {user && (
-              <div className="flex items-center gap-2.5 rounded-xl border border-white/6 bg-white/3 px-2.5 py-2 mt-1">
-                <Avatar user={user} initials={(user.name || user.email || '?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()} size={26} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-600 text-white/70 truncate">{user.name || user.email.split('@')[0]}</p>
-                  <p className="text-[10px] text-white/25 truncate">{user.email}</p>
-                </div>
+            {/* Profile — sidebar footer */}
+            {user && !collapsed && (
+              <div className="mt-1 rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)', background: 'var(--surface-3)' }}>
+                <ProfileDropdown />
               </div>
             )}
           </motion.div>

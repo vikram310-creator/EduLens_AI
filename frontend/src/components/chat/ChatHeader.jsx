@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useChatStore } from '../../store/chatStore'
 import { Zap, Menu } from 'lucide-react'
+import ProfileDropdown from '../auth/ProfileDropdown'
+import { useAuth } from '../../context/AuthContext'
 
 const PERSONA = {
   assistant: { icon: '✦', label: 'Assistant', color: 'text-violet-400',  ring: 'ring-violet-500/30' },
@@ -11,27 +13,31 @@ const PERSONA = {
 }
 
 const MODEL_LABEL = {
-  'llama-3.1-8b-instant':                  'LLaMA 3.1 · 8B',
-  'llama-3.3-70b-versatile':               'LLaMA 3.3 · 70B',
-  'llama3-groq-8b-8192-tool-use-preview':  'LLaMA Groq · 8B',
-  'gemma2-9b-it':                          'Gemma 2 · 9B',
+  'llama-3.1-8b-instant':                      'LLaMA 3.1 · 8B',
+  'llama-3.3-70b-versatile':                   'LLaMA 3.3 · 70B',
+  'llama3-groq-8b-8192-tool-use-preview':      'LLaMA Groq · 8B',
+  'gemma2-9b-it':                              'Gemma 2 · 9B',
   'meta-llama/llama-4-scout-17b-16e-instruct': 'Llama 4 Scout',
 }
 
 export default function ChatHeader({ session, totalTokens, onMenuOpen }) {
   const { model, isStreaming } = useChatStore()
+  const { user } = useAuth()
   if (!session) return null
   const p = PERSONA[session.system_prompt] || PERSONA.assistant
 
   return (
     <div
-      className="flex h-[52px] items-center justify-between border-b border-white/5 px-3"
-      style={{ background: 'rgba(8,8,16,0.85)', backdropFilter: 'blur(16px)' }}
+      className="flex h-[52px] items-center justify-between border-b px-3 gap-2"
+      style={{
+        background: 'var(--surface-2)',
+        borderColor: 'var(--border)',
+        backdropFilter: 'blur(16px)',
+      }}
     >
-      {/* Left — hamburger (always shown, used on mobile) + persona */}
-      <div className="flex items-center gap-2">
-
-        {/* Hamburger button — always rendered, visible on all screen sizes on mobile */}
+      {/* ── Left: hamburger + persona ─────────────────────────────────────── */}
+      <div className="flex items-center gap-2 min-w-0">
+        {/* Mobile hamburger */}
         <button
           onClick={onMenuOpen}
           style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -41,20 +47,24 @@ export default function ChatHeader({ session, totalTokens, onMenuOpen }) {
           <Menu size={16} />
         </button>
 
+        {/* Persona icon */}
         <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ring-1 ${p.ring} bg-white/4 text-base ${p.color}`}>
           {p.icon}
         </div>
 
+        {/* Session title + mode */}
         <div className="flex flex-col min-w-0">
-          <span className="font-display text-[13px] font-600 leading-tight text-white truncate max-w-[150px] sm:max-w-xs">
+          <span className="font-display text-[13px] font-600 leading-tight truncate max-w-[120px] sm:max-w-xs"
+            style={{ color: 'var(--text-1)' }}>
             {session.title}
           </span>
           <span className={`text-[11px] font-500 ${p.color} opacity-80`}>{p.label} mode</span>
         </div>
       </div>
 
-      {/* Right — status chips */}
+      {/* ── Right: status chips + profile ─────────────────────────────────── */}
       <div className="flex items-center gap-2 shrink-0">
+        {/* Streaming indicator */}
         <AnimatePresence>
           {isStreaming && (
             <motion.div
@@ -73,22 +83,36 @@ export default function ChatHeader({ session, totalTokens, onMenuOpen }) {
           )}
         </AnimatePresence>
 
-        {/* Model chip — hidden on small screens to save space */}
-        <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-white/7 bg-white/3 px-2.5 py-1">
+        {/* Model chip */}
+        <div className="hidden sm:flex items-center gap-1.5 rounded-full border px-2.5 py-1"
+          style={{ borderColor: 'var(--border-strong)', background: 'var(--surface-3)' }}>
           <Zap size={9} className="text-violet-400" />
-          <span className="text-[11px] font-500 text-white/40">{MODEL_LABEL[model] || model}</span>
+          <span className="text-[11px] font-500" style={{ color: 'var(--text-3)' }}>
+            {MODEL_LABEL[model] || model}
+          </span>
         </div>
 
+        {/* Token count */}
         <AnimatePresence>
           {totalTokens > 0 && !isStreaming && (
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="hidden md:flex items-center rounded-full border border-white/6 bg-white/2 px-2.5 py-1"
+              className="hidden md:flex items-center rounded-full border px-2.5 py-1"
+              style={{ borderColor: 'var(--border)', background: 'var(--surface-3)' }}
             >
-              <span className="text-[11px] text-white/22">{totalTokens.toLocaleString()} tokens</span>
+              <span className="text-[11px]" style={{ color: 'var(--text-3)' }}>
+                {totalTokens.toLocaleString()} tokens
+              </span>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* ── Profile dropdown — always visible in header ─────────────────── */}
+        {user && (
+          <div className="hidden lg:block">
+            <ProfileDropdown compact />
+          </div>
+        )}
       </div>
     </div>
   )
