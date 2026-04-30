@@ -62,8 +62,7 @@ export default function Sidebar({ onNavigate }) {
     <motion.aside
       animate={{ width: collapsed ? 56 : 268 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="relative z-10 flex h-full flex-shrink-0 flex-col overflow-hidden border-r border-white/5"
-      style={{ background: 'linear-gradient(180deg, #0a0a12 0%, #080810 100%)' }}
+      className="sidebar-bg relative z-10 flex h-full flex-shrink-0 flex-col overflow-hidden border-r border-white/5"
     >
       {/* Header */}
       <div className="flex h-14 items-center justify-between px-3 border-b border-white/5">

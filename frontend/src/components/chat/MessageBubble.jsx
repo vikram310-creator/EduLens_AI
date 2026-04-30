@@ -42,7 +42,7 @@ function CodeBlock({ children, className }) {
 
   return (
     <div className="group/code my-4 overflow-hidden rounded-2xl shadow-2xl shadow-black/60"
-         style={{ border: '1px solid rgba(255,255,255,0.07)', background: '#0a0a12' }}>
+         style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'var(--surface-2)' }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5"
            style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -80,7 +80,7 @@ function CodeBlock({ children, className }) {
         style={vscDarkPlus}
         customStyle={{
           margin: 0,
-          background: '#0a0a12',
+          background: 'var(--surface-2)',
           fontSize: '0.78rem',
           fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
           padding: '1.15rem 1.25rem',

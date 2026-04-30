@@ -21,7 +21,9 @@ export function AuthProvider({ children }) {
 
   // ── Theme ─────────────────────────────────────────────────────────────────
   const applyTheme = (theme) => {
-    document.documentElement.setAttribute('data-theme', theme || 'dark')
+    const t = theme || 'dark'
+    document.documentElement.setAttribute('data-theme', t)
+    document.body.setAttribute('data-theme', t)
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LogOut, Palette, User, Check, ChevronDown } from 'lucide-react'
+import { LogOut, Palette, Check, ChevronDown } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 const THEMES = [
@@ -12,9 +12,9 @@ const THEMES = [
 
 export default function ProfileDropdown() {
   const { user, logout, updateTheme } = useAuth()
-  const [open, setOpen]           = useState(false)
+  const [open, setOpen]             = useState(false)
   const [showThemes, setShowThemes] = useState(false)
-  const [saving, setSaving]       = useState(false)
+  const [saving, setSaving]         = useState(false)
   const ref = useRef(null)
 
   useEffect(() => {
@@ -29,6 +29,7 @@ export default function ProfileDropdown() {
     .split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
 
   const handleTheme = async (themeId) => {
+    if (saving || user.theme === themeId) return
     setSaving(true)
     await updateTheme(themeId)
     setSaving(false)
@@ -36,57 +37,61 @@ export default function ProfileDropdown() {
 
   return (
     <div className="relative" ref={ref}>
+      {/* Trigger */}
       <button
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-white/6 group"
+        style={{ color: 'var(--text-2)' }}
       >
         <Avatar user={user} initials={initials} size={28} />
-        <span className="hidden sm:block text-xs font-500 text-white/60 group-hover:text-white/90 transition max-w-[90px] truncate">
+        <span className="hidden sm:block text-xs font-medium max-w-[90px] truncate transition group-hover:opacity-100"
+          style={{ color: 'var(--text-2)' }}>
           {user.name || user.email.split('@')[0]}
         </span>
-        <ChevronDown size={12} className={`text-white/30 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={12} className={`transition-transform opacity-50 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+            initial={{ opacity: 0, scale: 0.95, y: -6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -4 }}
+            exit={{ opacity: 0, scale: 0.95, y: -6 }}
             transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-white/10 overflow-hidden z-50"
-            style={{
-              background: 'linear-gradient(145deg, #0f0f1e 0%, #0a0a14 100%)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(139,92,246,0.1)',
-            }}
+            className="dropdown-card absolute right-0 top-full mt-2 w-64 rounded-2xl overflow-hidden z-50"
           >
-            {/* User info */}
-            <div className="p-4 border-b border-white/6">
+            {/* User info header */}
+            <div className="p-4" style={{ borderBottom: '1px solid var(--border)' }}>
               <div className="flex items-center gap-3">
                 <Avatar user={user} initials={initials} size={40} />
                 <div className="min-w-0">
-                  <p className="text-sm font-600 text-white truncate">{user.name || 'User'}</p>
-                  <p className="text-[11px] text-white/35 truncate">{user.email}</p>
-                  <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-violet-500/15 px-2 py-0.5 text-[10px] font-500 text-violet-300">
+                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>
+                    {user.name || 'User'}
+                  </p>
+                  <p className="text-[11px] truncate" style={{ color: 'var(--text-3)' }}>
+                    {user.email}
+                  </p>
+                  <span className="mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium"
+                    style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}>
                     {user.provider === 'google' ? '🔵 Google' : '📧 Email'}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Theme section */}
+            {/* Menu items */}
             <div className="p-2">
+              {/* Appearance toggle */}
               <button
                 onClick={() => setShowThemes(s => !s)}
-                className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm text-white/70 hover:bg-white/6 hover:text-white transition"
+                className="dropdown-item w-full"
               >
-                <span className="flex items-center gap-2.5">
-                  <Palette size={14} className="text-white/40" />
-                  Appearance
-                </span>
-                <ChevronDown size={12} className={`text-white/30 transition-transform ${showThemes ? 'rotate-180' : ''}`} />
+                <Palette size={14} style={{ color: 'var(--text-3)' }} />
+                <span className="flex-1 text-left">Appearance</span>
+                <ChevronDown size={12} className={`transition-transform opacity-40 ${showThemes ? 'rotate-180' : ''}`} />
               </button>
 
+              {/* Theme grid */}
               <AnimatePresence>
                 {showThemes && (
                   <motion.div
@@ -95,39 +100,40 @@ export default function ProfileDropdown() {
                     exit={{ opacity: 0, height: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="grid grid-cols-2 gap-1.5 px-2 pb-1 pt-1.5">
-                      {THEMES.map(t => (
-                        <button
-                          key={t.id}
-                          onClick={() => handleTheme(t.id)}
-                          disabled={saving}
-                          className={`relative flex flex-col items-start gap-1.5 rounded-xl border p-2.5 text-left transition
-                            ${user.theme === t.id
-                              ? 'border-violet-500/50 bg-violet-500/10'
-                              : 'border-white/6 bg-white/3 hover:border-white/14 hover:bg-white/6'}`}
-                        >
-                          {/* Colour preview */}
-                          <div className="flex gap-1">
-                            {t.preview.map((c, i) => (
-                              <div key={i} className="h-3 w-3 rounded-full border border-white/10" style={{ background: c }} />
-                            ))}
-                          </div>
-                          <span className="text-[11px] font-500 text-white/60">{t.label}</span>
-                          {user.theme === t.id && (
-                            <Check size={10} className="absolute right-2 top-2 text-violet-400" />
-                          )}
-                        </button>
-                      ))}
+                    <div className="grid grid-cols-2 gap-1.5 px-1 pb-1 pt-1.5">
+                      {THEMES.map(t => {
+                        const isActive = user.theme === t.id
+                        return (
+                          <button
+                            key={t.id}
+                            onClick={() => handleTheme(t.id)}
+                            disabled={saving}
+                            className={`theme-btn ${isActive ? 'active' : ''} disabled:opacity-50`}
+                          >
+                            {/* Colour dots */}
+                            <div className="flex gap-1 mb-1">
+                              {t.preview.map((c, i) => (
+                                <div key={i} className="h-3 w-3 rounded-full"
+                                  style={{ background: c, border: '1px solid rgba(128,128,128,0.25)' }} />
+                              ))}
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="theme-label">{t.label}</span>
+                              {isActive && <Check size={10} style={{ color: 'var(--accent)' }} />}
+                            </div>
+                          </button>
+                        )
+                      })}
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              <div className="my-1 h-px bg-white/6" />
+              <div className="my-1 h-px" style={{ background: 'var(--border)' }} />
 
               <button
                 onClick={() => { logout(); setOpen(false) }}
-                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-red-400/80 hover:bg-red-500/10 hover:text-red-300 transition"
+                className="dropdown-item dropdown-item-danger w-full"
               >
                 <LogOut size={14} />
                 Sign out
@@ -143,19 +149,17 @@ export default function ProfileDropdown() {
 export function Avatar({ user, initials, size = 32 }) {
   if (user?.avatar_url) {
     return (
-      <img
-        src={user.avatar_url}
-        alt={user.name || 'Avatar'}
-        referrerPolicy="no-referrer"
-        style={{ width: size, height: size }}
-        className="rounded-full object-cover border border-white/10 flex-shrink-0"
-      />
+      <img src={user.avatar_url} alt={user.name || 'Avatar'} referrerPolicy="no-referrer"
+        style={{ width: size, height: size, border: '1px solid var(--border)' }}
+        className="rounded-full object-cover flex-shrink-0" />
     )
   }
   return (
     <div
-      style={{ width: size, height: size, fontSize: size * 0.38 }}
-      className="flex-shrink-0 flex items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 font-700 text-white select-none border border-white/10"
+      style={{ width: size, height: size, fontSize: size * 0.38,
+        background: 'linear-gradient(135deg, var(--accent), var(--accent-mid))',
+        border: '1px solid var(--border)' }}
+      className="flex-shrink-0 flex items-center justify-center rounded-full font-bold text-white select-none"
     >
       {initials}
     </div>

@@ -48,7 +48,7 @@ export default function StreamingBubble({ content }) {
                   }[rawLang] || { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', label: rawLang.toUpperCase() }
                   return (
                     <div className="my-4 overflow-hidden rounded-2xl shadow-2xl shadow-black/60"
-                         style={{ border: '1px solid rgba(255,255,255,0.07)', background: '#0a0a12' }}>
+                         style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'var(--surface-2)' }}>
                       <div className="flex items-center gap-3 px-4 py-2.5"
                            style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                         <div className="flex gap-1.5">
@@ -65,7 +65,7 @@ export default function StreamingBubble({ content }) {
                         language={rawLang}
                         style={vscDarkPlus}
                         customStyle={{
-                          margin: 0, background: '#0a0a12',
+                          margin: 0, background: 'var(--surface-2)',
                           fontSize: '0.78rem',
                           fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
                           padding: '1.15rem 1.25rem', lineHeight: '1.7',

@@ -6,7 +6,7 @@ import api from '../../utils/api'
 
 export default function AuthModal() {
   const { showAuth, setShowAuth, register, login, loginWithGoogle, onAuthSuccess } = useAuth()
-  const [mode, setMode]         = useState('login')   // 'login' | 'register'
+  const [mode, setMode]         = useState('login')
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [name, setName]         = useState('')
@@ -15,7 +15,6 @@ export default function AuthModal() {
   const [error, setError]       = useState('')
   const [googleLoading, setGoogleLoading] = useState(false)
 
-  // Listen for Google OAuth callback code in URL
   useEffect(() => {
     const url = new URL(window.location.href)
     const code = url.searchParams.get('code')
@@ -28,51 +27,28 @@ export default function AuthModal() {
   }, [])
 
   const handleGoogleCode = async (code) => {
-    setGoogleLoading(true)
-    setError('')
-    try {
-      await loginWithGoogle(code)
-      onAuthSuccess()
-    } catch (e) {
-      setError(e.response?.data?.detail || 'Google sign-in failed')
-    } finally {
-      setGoogleLoading(false)
-    }
+    setGoogleLoading(true); setError('')
+    try { await loginWithGoogle(code); onAuthSuccess() }
+    catch (e) { setError(e.response?.data?.detail || 'Google sign-in failed') }
+    finally { setGoogleLoading(false) }
   }
 
   const handleGoogleClick = async () => {
     setGoogleLoading(true)
-    try {
-      const { data } = await api.get('/auth/google/url')
-      window.location.href = data.url
-    } catch (e) {
-      setError('Could not reach Google. Check server config.')
-      setGoogleLoading(false)
-    }
+    try { const { data } = await api.get('/auth/google/url'); window.location.href = data.url }
+    catch { setError('Could not reach Google. Check server config.'); setGoogleLoading(false) }
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+    e.preventDefault(); setError(''); setLoading(true)
     try {
-      if (mode === 'register') {
-        await register(email, password, name)
-      } else {
-        await login(email, password)
-      }
+      mode === 'register' ? await register(email, password, name) : await login(email, password)
       onAuthSuccess()
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Something went wrong')
-    } finally {
-      setLoading(false)
-    }
+    } catch (err) { setError(err.response?.data?.detail || 'Something went wrong') }
+    finally { setLoading(false) }
   }
 
-  const switchMode = () => {
-    setMode(m => m === 'login' ? 'register' : 'login')
-    setError('')
-  }
+  const switchMode = () => { setMode(m => m === 'login' ? 'register' : 'login'); setError('') }
 
   if (!showAuth) return null
 
@@ -80,82 +56,70 @@ export default function AuthModal() {
     <AnimatePresence>
       <motion.div
         key="auth-backdrop"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(12px)' }}
+        style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(14px)' }}
         onClick={(e) => { if (e.target === e.currentTarget) setShowAuth(false) }}
       >
         <motion.div
           key="auth-card"
-          initial={{ opacity: 0, scale: 0.92, y: 20 }}
+          initial={{ opacity: 0, scale: 0.92, y: 24 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 20 }}
+          exit={{ opacity: 0, scale: 0.92, y: 24 }}
           transition={{ type: 'spring', stiffness: 340, damping: 28 }}
-          className="relative w-full max-w-sm rounded-2xl border border-white/10 overflow-hidden"
-          style={{ background: 'linear-gradient(145deg, #0f0f1a 0%, #0a0a14 100%)', boxShadow: '0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,92,246,0.15)' }}
+          className="auth-card relative w-full max-w-sm rounded-2xl overflow-hidden"
           onClick={e => e.stopPropagation()}
         >
-          {/* Ambient gradient */}
-          <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full bg-violet-600/12 blur-[60px]" />
+          {/* Ambient glow */}
+          <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full blur-[60px]"
+            style={{ background: 'var(--accent-soft)' }} />
 
           <div className="relative p-7">
             {/* Close */}
-            <button
-              onClick={() => setShowAuth(false)}
-              className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-lg text-white/30 hover:bg-white/8 hover:text-white transition"
-            >
+            <button onClick={() => setShowAuth(false)}
+              className="auth-icon-btn absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-lg transition">
               <X size={14} />
             </button>
 
-            {/* Logo */}
+            {/* Logo + title */}
             <div className="mb-6 flex flex-col items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-[14px] border border-violet-500/25 bg-gradient-to-br from-violet-600/25 to-indigo-700/20 text-2xl shadow-xl shadow-violet-900/30">
+              <div className="flex h-12 w-12 items-center justify-center rounded-[14px] text-2xl"
+                style={{ border: '1px solid var(--accent-soft)', background: 'var(--accent-soft)', boxShadow: '0 8px 32px var(--accent-soft)' }}>
                 ⚡
               </div>
               <div className="text-center">
-                <h2 className="font-display text-lg font-700 text-white">
+                <h2 className="auth-title text-lg font-bold">
                   {mode === 'login' ? 'Welcome back' : 'Create account'}
                 </h2>
-                <p className="mt-0.5 text-xs text-white/35">
+                <p className="auth-subtitle mt-0.5 text-xs">
                   {mode === 'login' ? 'Sign in to access your chats' : 'Join EduLens AI today'}
                 </p>
               </div>
             </div>
 
             {/* Google */}
-            <button
-              onClick={handleGoogleClick}
-              disabled={googleLoading || loading}
-              className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm font-500 text-white transition hover:bg-white/10 hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
-            >
-              {googleLoading ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <GoogleIcon />
-              )}
+            <button onClick={handleGoogleClick} disabled={googleLoading || loading}
+              className="auth-btn-secondary flex w-full items-center justify-center gap-2.5 rounded-xl py-2.5 text-sm font-medium transition mb-4 disabled:opacity-50 disabled:cursor-not-allowed">
+              {googleLoading ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
               Continue with Google
             </button>
 
             {/* Divider */}
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex-1 h-px bg-white/8" />
-              <span className="text-[11px] text-white/25 font-500">or continue with email</span>
-              <div className="flex-1 h-px bg-white/8" />
+              <div className="flex-1 h-px auth-divider" />
+              <span className="auth-subtitle text-[11px] font-medium">or continue with email</span>
+              <div className="flex-1 h-px auth-divider" />
             </div>
 
             {/* Error */}
             <AnimatePresence>
               {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                <motion.div initial={{ opacity: 0, height: 0, marginBottom: 0 }}
                   animate={{ opacity: 1, height: 'auto', marginBottom: 12 }}
                   exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                  className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2.5 text-xs text-red-300"
-                >
-                  <AlertCircle size={13} className="shrink-0" />
-                  {error}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs text-red-400"
+                  style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                  <AlertCircle size={13} className="shrink-0" />{error}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -173,24 +137,21 @@ export default function AuthModal() {
                   onChange={e => setPassword(e.target.value)} type={showPw ? 'text' : 'password'}
                   autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required />
                 <button type="button" onClick={() => setShowPw(p => !p)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition">
+                  className="auth-icon-btn absolute right-3 top-1/2 -translate-y-1/2 transition">
                   {showPw ? <EyeOff size={13} /> : <Eye size={13} />}
                 </button>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading || googleLoading}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-2.5 text-sm font-600 text-white transition hover:from-violet-500 hover:to-indigo-500 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-violet-900/30 mt-1"
-              >
+              <button type="submit" disabled={loading || googleLoading}
+                className="auth-btn-primary flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-white transition active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed mt-1">
                 {loading && <Loader2 size={14} className="animate-spin" />}
                 {mode === 'login' ? 'Sign in' : 'Create account'}
               </button>
             </form>
 
-            <p className="mt-4 text-center text-xs text-white/30">
+            <p className="auth-subtitle mt-4 text-center text-xs">
               {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-              <button onClick={switchMode} className="text-violet-400 hover:text-violet-300 font-500 transition">
+              <button onClick={switchMode} className="auth-link font-medium transition">
                 {mode === 'login' ? 'Sign up' : 'Sign in'}
               </button>
             </p>
@@ -204,11 +165,8 @@ export default function AuthModal() {
 function Field({ icon, ...props }) {
   return (
     <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/25">{icon}</span>
-      <input
-        {...props}
-        className="w-full rounded-xl border border-white/8 bg-white/4 py-2.5 pl-9 pr-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-violet-500/50 focus:bg-white/6 focus:ring-2 focus:ring-violet-500/15"
-      />
+      <span className="auth-icon absolute left-3 top-1/2 -translate-y-1/2">{icon}</span>
+      <input {...props} className="auth-input w-full rounded-xl py-2.5 pl-9 pr-3 text-sm outline-none transition" />
     </div>
   )
 }

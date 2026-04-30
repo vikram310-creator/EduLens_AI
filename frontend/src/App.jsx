@@ -29,7 +29,7 @@ export default function App() {
   // While checking stored token, show a minimal loader
   if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center" style={{ background: '#080810' }}>
+      <div className="app-bg flex h-screen w-screen items-center justify-center">
         <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
           className="h-6 w-6 rounded-full border-2 border-violet-500/30 border-t-violet-500" />
       </div>
@@ -41,7 +41,7 @@ export default function App() {
   }
 
   return (
-    <div className="noise flex h-screen w-screen overflow-hidden" style={{ background: 'var(--surface, #080810)' }}>
+    <div className="app-bg noise flex h-screen w-screen overflow-hidden">
       {/* Global ambient blobs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-56 -left-40 h-[500px] w-[500px] rounded-full bg-violet-900/8 blur-[130px]" />
