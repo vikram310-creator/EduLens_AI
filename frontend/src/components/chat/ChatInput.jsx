@@ -46,7 +46,8 @@ export default function ChatInput() {
 
   // Placeholder text based on state
   const placeholder = (() => {
-    if (isProcessing) return interimText || '⏳ Transcribing your speech…'
+    if (isProcessing) return '⏳ Transcribing…'
+    if (interimText && (isListening || isProcessing)) return interimText
     if (isListening && isWhisper) return '🎙 Recording… tap ■ when done'
     if (isListening) return '🎙 Speak now — typing as you talk…'
     return 'Ask anything…'

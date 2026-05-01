@@ -66,11 +66,12 @@ export default function ProfileDropdown({ compact = false }) {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -6 }}
+            initial={{ opacity: 0, scale: 0.95, y: 6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -6 }}
+            exit={{ opacity: 0, scale: 0.95, y: 6 }}
             transition={{ duration: 0.14, ease: [0.22, 1, 0.36, 1] }}
-            className="dropdown-card absolute right-0 top-full mt-2 w-64 rounded-2xl overflow-hidden z-[100]"
+            className="dropdown-card absolute left-0 bottom-full mb-2 w-64 rounded-2xl z-[200]"
+            style={{ overflow: 'visible' }}
           >
             {/* User info */}
             <div className="p-4" style={{ borderBottom: '1px solid var(--border)' }}>

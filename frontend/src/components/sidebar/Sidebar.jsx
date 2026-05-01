@@ -275,7 +275,7 @@ export default function Sidebar({ onNavigate, onBackToLanding }) {
 
             {/* Profile — sidebar footer */}
             {user && !collapsed && (
-              <div className="mt-1 rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)', background: 'var(--surface-3)' }}>
+              <div className="mt-1 rounded-xl" style={{ border: '1px solid var(--border)', background: 'var(--surface-3)' }}>
                 <ProfileDropdown />
               </div>
             )}

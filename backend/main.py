@@ -6,6 +6,7 @@ from database.db import init_db
 from routes.chat import router as chat_router
 from routes.sessions import router as sessions_router
 from routes.auth import router as auth_router
+from routes.transcribe import router as transcribe_router
 
 load_dotenv()
 
@@ -31,6 +32,7 @@ app.add_middleware(
 app.include_router(chat_router, prefix="/api")
 app.include_router(sessions_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(transcribe_router, prefix="/api")
 
 @app.on_event("startup")
 async def startup():
