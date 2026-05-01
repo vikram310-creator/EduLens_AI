@@ -2,13 +2,15 @@
   command = "npm install && npm run build"
   publish = "dist"
 
+# Required for Whisper WASM Web Worker (SharedArrayBuffer)
 [[headers]]
   for = "/*"
   [headers.values]
     Cross-Origin-Opener-Policy = "same-origin"
     Cross-Origin-Embedder-Policy = "require-corp"
 
+# SPA fallback — all routes serve index.html
 [[redirects]]
-  from = "/*"
-  to   = "/index.html"
+  from   = "/*"
+  to     = "/index.html"
   status = 200
