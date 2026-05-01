@@ -7,7 +7,7 @@ import ProfileDropdown from '../auth/ProfileDropdown'
 
 // onNavigate: called on mobile after a session is selected / new chat created
 // so the parent can close the drawer
-export default function Sidebar({ onNavigate }) {
+export default function Sidebar({ onNavigate, onBackToLanding }) {
   const {
     sessions, activeSessionId, createSession,
     setActiveSession, renameSession, deleteSession,

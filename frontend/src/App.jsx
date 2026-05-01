@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from './components/sidebar/Sidebar'
 import ChatPage from './pages/ChatPage'
+import LandingPage from './pages/LandingPage'
 import { useChatStore } from './store/chatStore'
 import { useAuth } from './context/AuthContext'
 import AuthModal from './components/auth/AuthModal'
@@ -15,18 +16,37 @@ const PERSONAS = [
   { id: 'analyst',   icon: '◎', label: 'Analyst',   desc: 'Data-driven strategist',     color: 'from-rose-600/20 to-pink-700/10',    ring: 'ring-rose-500/20'   },
 ]
 
+// Simple hash-based view: 'landing' | 'app'
+function getInitialView() {
+  if (typeof window !== 'undefined' && window.location.hash === '#app') return 'app'
+  return 'landing'
+}
+
 export default function App() {
   const { loadSessions, activeSessionId, createSession } = useChatStore()
-  const { user, loading, requireAuth, setShowAuth } = useAuth()
+  const { user, loading, requireAuth, setShowAuth, setAuthIntent } = useAuth()
+  const [view, setView]               = useState(getInitialView)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
+  // Keep URL hash in sync
   useEffect(() => {
-    if (user) loadSessions()
-  }, [user])
+    window.location.hash = view === 'app' ? '#app' : ''
+  }, [view])
 
-  const closeMobileSidebar = () => setMobileSidebarOpen(false)
+  // Load sessions when user logs in or enters app
+  useEffect(() => {
+    if (user && view === 'app') loadSessions()
+  }, [user, view])
 
-  // While checking stored token, show a minimal loader
+  // If user is already logged in and lands on landing, keep them on landing
+  // (they consciously navigated there) — only auto-enter if hash was #app
+  useEffect(() => {
+    if (!loading && user && window.location.hash === '#app') {
+      setView('app')
+    }
+  }, [loading, user])
+
+  // ── Loading spinner (only while verifying token, no cached user) ──────────
   if (loading) {
     return (
       <div className="app-bg flex h-screen w-screen items-center justify-center">
@@ -36,22 +56,44 @@ export default function App() {
     )
   }
 
+  // ── Landing page ─────────────────────────────────────────────────────────
+  if (view === 'landing') {
+    return (
+      <>
+        <div style={{ height: '100vh', overflowY: 'auto', overflowX: 'hidden' }}>
+          <LandingPage onEnterApp={() => {
+            if (user) { setView('app'); loadSessions() }
+            else {
+              // Set intent so after login they go straight to the app
+              setAuthIntent(() => () => { setView('app'); loadSessions() })
+              setShowAuth(true)
+            }
+          }} />
+        </div>
+        <AuthModal />
+      </>
+    )
+  }
+
+  // ── Chat App ─────────────────────────────────────────────────────────────
+  const closeMobileSidebar = () => setMobileSidebarOpen(false)
+
   const handlePersonaClick = (personaId) => {
     requireAuth(() => createSession(personaId))
   }
 
   return (
     <div className="app-bg noise flex h-screen w-screen overflow-hidden">
-      {/* Global ambient blobs */}
+      {/* Ambient blobs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-56 -left-40 h-[500px] w-[500px] rounded-full bg-violet-900/8 blur-[130px]" />
         <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-indigo-900/6 blur-[100px]" />
       </div>
 
-      {/* Desktop sidebar — only show when logged in */}
+      {/* Desktop sidebar */}
       {user && (
         <div className="hidden lg:flex h-full flex-shrink-0">
-          <Sidebar />
+          <Sidebar onBackToLanding={() => setView('landing')} />
         </div>
       )}
 
@@ -71,7 +113,7 @@ export default function App() {
           <motion.div key="mobile-sidebar" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
             className="fixed inset-y-0 left-0 z-40 lg:hidden" style={{ width: '268px' }}>
-            <Sidebar onNavigate={closeMobileSidebar} />
+            <Sidebar onNavigate={closeMobileSidebar} onBackToLanding={() => { setView('landing'); closeMobileSidebar() }} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -88,12 +130,11 @@ export default function App() {
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               className="absolute inset-0 flex flex-col items-center justify-center px-6">
 
-              {/* Top bar for mobile menu + profile */}
+              {/* Mobile top bar */}
               <div className="absolute top-4 left-4 right-4 flex items-center justify-between lg:hidden">
                 {user ? (
                   <button onClick={() => setMobileSidebarOpen(true)}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/8 bg-white/4 text-white/50 hover:bg-white/8 hover:text-white transition"
-                    aria-label="Open menu">
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/8 bg-white/4 text-white/50 hover:bg-white/8 hover:text-white transition">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                       <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                     </svg>
@@ -102,9 +143,13 @@ export default function App() {
                 {user && <ProfileDropdown />}
               </div>
 
-              {/* Top-right profile on desktop */}
+              {/* Desktop top-right */}
               {user && (
-                <div className="absolute top-4 right-4 hidden lg:flex items-center">
+                <div className="absolute top-4 right-4 hidden lg:flex items-center gap-2">
+                  <button onClick={() => setView('landing')}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-white/8 text-white/40 hover:text-white/70 hover:border-white/15 transition">
+                    ← Back to home
+                  </button>
                   <ProfileDropdown />
                 </div>
               )}
@@ -118,7 +163,7 @@ export default function App() {
                   </motion.div>
                   <h1 className="font-display text-4xl font-800 tracking-tight text-white">EduLens_AI</h1>
                   <p className="mt-2 text-[15px] text-white/30">
-                    {user ? 'AI at the speed of thought. Choose a mode to begin.' : 'Sign in to start chatting with AI.'}
+                    {user ? 'Choose a mode to begin your session.' : 'Sign in to start chatting with AI.'}
                   </p>
                 </div>
 
@@ -156,7 +201,6 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* Global auth modal */}
       <AuthModal />
     </div>
   )

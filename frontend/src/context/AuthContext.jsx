@@ -149,7 +149,7 @@ export function AuthProvider({ children }) {
       showAuth, setShowAuth,
       register, login, loginWithGoogle, logout,
       updateTheme, updateProfile,
-      requireAuth, onAuthSuccess,
+      requireAuth, onAuthSuccess, setAuthIntent,
     }}>
       {children}
     </AuthContext.Provider>
