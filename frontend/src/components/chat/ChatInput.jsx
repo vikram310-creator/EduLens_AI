@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mic, Square, ArrowUp, Paperclip, X, Loader2 } from 'lucide-react'
+import { Mic, Square, ArrowUp, Paperclip, X, Loader2, MicOff } from 'lucide-react'
 import { useChatStore } from '../../store/chatStore'
 import { useVoiceInput } from '../../hooks/useVoiceInput'
 import { useAuth } from '../../context/AuthContext'
@@ -36,11 +36,11 @@ export default function ChatInput() {
   const { isListening, supported, startListening, stopListening, isProcessing, engine } =
     useVoiceInput(handleVoiceResult, handleInterim)
 
-  // For Whisper: show interim status messages (not actual transcribed text) in placeholder area
   const isWhisper = engine === 'whisper'
+  const isDetecting = engine === 'pending'
 
-  // displayValue: for Web Speech, show interim live text. For Whisper, keep input clean.
-  const displayValue = (!isWhisper && isListening && interimText)
+  // displayValue: for Web Speech, show interim live text. For Whisper/pending, keep input clean.
+  const displayValue = (!isWhisper && !isDetecting && isListening && interimText)
     ? (input ? input + ' ' + interimText : interimText)
     : input
 
@@ -103,6 +103,8 @@ export default function ChatInput() {
   const canSend = (input.trim().length > 0 || attachedImages.length > 0) && !isStreaming && !isProcessing
   const hasInput = input.length > 0 || interimText.length > 0
   const micActive = isListening || isProcessing
+
+  const micDisabled = isProcessing || isDetecting
 
   // Border glow colour
   const boxShadow = micActive
@@ -185,7 +187,7 @@ export default function ChatInput() {
               className="w-full resize-none bg-transparent px-3 py-2.5 text-sm outline-none"
               style={{
                 minHeight: '44px', maxHeight: '180px', lineHeight: '1.55',
-                color: (!isWhisper && isListening && interimText)
+                color: (!isWhisper && !isDetecting && isListening && interimText)
                   ? 'rgba(196,181,253,0.7)'
                   : 'rgba(255,255,255,0.9)',
               }}
@@ -240,25 +242,32 @@ export default function ChatInput() {
               )}
             </motion.button>
 
-            {/* Mic — always shown, engine shown in tooltip */}
+            {/* Mic */}
             <motion.button
-              whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
+              whileHover={!micDisabled ? { scale: 1.08 } : {}}
+              whileTap={!micDisabled ? { scale: 0.92 } : {}}
               onClick={micActive ? stopListening : startListening}
               title={
-                micActive
-                  ? 'Stop recording'
-                  : isWhisper
-                    ? 'Voice input (Whisper — works in Brave)'
-                    : 'Voice input — types as you speak'
+                isDetecting
+                  ? 'Detecting voice engine…'
+                  : micActive
+                    ? 'Stop recording'
+                    : isWhisper
+                      ? 'Voice input (Whisper — works in Brave)'
+                      : 'Voice input — types as you speak'
               }
-              disabled={isProcessing}
+              disabled={micDisabled}
               className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all ${
                 micActive
                   ? 'bg-red-500/18 text-red-400 border border-red-500/30'
-                  : 'text-white/22 hover:bg-white/6 hover:text-white/55'
-              } ${isProcessing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  : isDetecting
+                    ? 'text-white/15 cursor-wait'
+                    : 'text-white/22 hover:bg-white/6 hover:text-white/55'
+              } ${micDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
             >
-              {isListening && !isProcessing ? (
+              {isDetecting ? (
+                <Loader2 size={13} className="animate-spin opacity-50" />
+              ) : isListening && !isProcessing ? (
                 <motion.div
                   animate={{ scale: [1, 1.3, 1] }}
                   transition={{ repeat: Infinity, duration: 0.8 }}
@@ -267,8 +276,10 @@ export default function ChatInput() {
                 </motion.div>
               ) : isProcessing ? (
                 <Loader2 size={14} className="animate-spin" />
-              ) : (
+              ) : supported ? (
                 <Mic size={14} />
+              ) : (
+                <MicOff size={14} className="opacity-40" />
               )}
             </motion.button>
 
@@ -298,13 +309,13 @@ export default function ChatInput() {
           </div>
         </motion.div>
 
-        {/* Footer note — shows which engine is active */}
+        {/* Footer note */}
         <p className="mt-2 text-center text-[11px] text-white/14">
           <span className="inline-flex items-center gap-1 opacity-90">
-            ⚠️ EduLens_AI may produce inaccurate responses. Verify important information.
-            {isWhisper && (
+            ⚠️ EduLens AI may produce inaccurate responses. Verify important information.
+            {!isDetecting && isWhisper && (
               <span className="ml-1 rounded px-1 py-0.5 text-[9px] font-semibold" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}>
-                Voice: Whisper (Brave)
+                Voice: Whisper
               </span>
             )}
           </span>

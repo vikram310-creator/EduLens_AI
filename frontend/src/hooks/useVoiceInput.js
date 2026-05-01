@@ -1,19 +1,52 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 
-// ─── Detect if Web Speech API is truly usable ────────────────────────────────
-// Brave exposes webkitSpeechRecognition but blocks it at runtime (network error).
-// We detect Brave via its navigator.brave API and fall back to Whisper WASM.
-function detectBrave() {
-  return !!(navigator.brave && navigator.brave.isBrave)
+// ─── Brave detection (async — isBrave returns a Promise) ──────────────────────
+// navigator.brave.isBrave() is a Promise in Brave ≥ 1.x
+// We resolve it once on load and cache the result.
+let _isBrave = false
+let _braveChecked = false
+
+async function checkBrave() {
+  if (_braveChecked) return _isBrave
+  _braveChecked = true
+  try {
+    if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
+      _isBrave = await navigator.brave.isBrave()
+    }
+  } catch {
+    _isBrave = false
+  }
+  return _isBrave
 }
 
 function hasSpeechRecognition() {
   return ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)
 }
 
-// ─── Whisper Worker (lazy-loaded) ────────────────────────────────────────────
-// Runs @xenova/transformers Whisper-tiny entirely in a Web Worker (WASM).
-// No server calls, no Google, works in Brave with Shields up.
+// ─── Test if Web Speech actually works (Brave blocks it at runtime) ───────────
+// We spin up a recognition object, start it, and listen for either a start
+// event (works!) or a network/service-not-allowed error (blocked).
+function testWebSpeechWorks() {
+  return new Promise((resolve) => {
+    if (!hasSpeechRecognition()) { resolve(false); return }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    const r = new SR()
+    let settled = false
+    const done = (v) => { if (!settled) { settled = true; try { r.abort() } catch {} resolve(v) } }
+    const timer = setTimeout(() => done(false), 2500)
+    r.onstart = () => { clearTimeout(timer); done(true) }
+    r.onerror = (e) => {
+      clearTimeout(timer)
+      // Brave throws 'network' or 'service-not-allowed'; Chrome gets 'not-allowed' only if mic denied
+      done(e.error !== 'network' && e.error !== 'service-not-allowed')
+    }
+    r.onend = () => { clearTimeout(timer); done(false) }
+    try { r.start() } catch { clearTimeout(timer); done(false) }
+  })
+}
+
+// ─── Whisper Worker (lazy-loaded) ─────────────────────────────────────────────
+// Uses importScripts (classic worker) to avoid Blob ESM restrictions in Brave.
 let whisperWorker = null
 let workerReady = false
 const workerCallbacks = new Map()
@@ -22,17 +55,19 @@ let cbId = 0
 function getWhisperWorker() {
   if (whisperWorker) return whisperWorker
 
-  // Inline worker as a blob so we don't need an extra file
+  // Classic worker script — uses importScripts instead of ESM import
+  // so it works in Brave's stricter content-security environment.
   const workerCode = `
-import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js';
+importScripts('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
 
 let transcriber = null;
 
 async function loadModel() {
-  transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en', {
-    chunk_length_s: 30,
-    stride_length_s: 5,
-  });
+  transcriber = await self.Transformers.pipeline(
+    'automatic-speech-recognition',
+    'Xenova/whisper-tiny.en',
+    { chunk_length_s: 30, stride_length_s: 5 }
+  );
   self.postMessage({ type: 'ready' });
 }
 
@@ -48,17 +83,16 @@ self.onmessage = async (e) => {
     self.postMessage({ type: 'error', id, error: err.message });
   }
 };
-  `
+`
   const blob = new Blob([workerCode], { type: 'application/javascript' })
   const url = URL.createObjectURL(blob)
-  whisperWorker = new Worker(url, { type: 'module' })
+  // Classic worker (no { type: 'module' }) — works in Brave
+  whisperWorker = new Worker(url)
 
   whisperWorker.onmessage = (e) => {
     const { type, id, text, error } = e.data
     if (type === 'ready') {
       workerReady = true
-      // Flush any queued callbacks
-      workerCallbacks.forEach((cb) => cb.resolve && cb.resolve(null))
     } else if (type === 'result' && workerCallbacks.has(id)) {
       workerCallbacks.get(id).resolve(text)
       workerCallbacks.delete(id)
@@ -73,17 +107,15 @@ self.onmessage = async (e) => {
 
 async function transcribeAudio(float32Array) {
   const worker = getWhisperWorker()
-  // Wait until model is loaded
   if (!workerReady) {
     await new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('Model load timeout')), 30000)
-      const orig = worker.onmessage
-      const check = (e) => {
+      const timeout = setTimeout(() => reject(new Error('Model load timeout')), 45000)
+      const prev = worker.onmessage
+      worker.onmessage = (e) => {
+        if (prev) prev(e)
         if (e.data.type === 'ready') { clearTimeout(timeout); resolve() }
         else if (e.data.type === 'error' && !e.data.id) { clearTimeout(timeout); reject(new Error(e.data.error)) }
-        if (orig) orig(e)
       }
-      worker.onmessage = check
     })
   }
   const id = ++cbId
@@ -93,7 +125,7 @@ async function transcribeAudio(float32Array) {
   })
 }
 
-// ─── Whisper recorder hook ────────────────────────────────────────────────────
+// ─── Whisper recorder hook ─────────────────────────────────────────────────────
 function useWhisperVoice(onResult, onInterim) {
   const [isListening, setIsListening] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -102,9 +134,7 @@ function useWhisperVoice(onResult, onInterim) {
   const streamRef = useRef(null)
   const activeRef = useRef(false)
 
-  // Pre-warm the worker (model download starts immediately)
   useEffect(() => {
-    // Kick off download in background
     try { getWhisperWorker() } catch {}
   }, [])
 
@@ -114,6 +144,7 @@ function useWhisperVoice(onResult, onInterim) {
       mediaRecorderRef.current.stop()
     }
     streamRef.current?.getTracks().forEach(t => t.stop())
+    streamRef.current = null
     setIsListening(false)
     if (onInterim) onInterim('')
   }, [onInterim])
@@ -135,15 +166,19 @@ function useWhisperVoice(onResult, onInterim) {
       }
 
       recorder.onstop = async () => {
-        if (!chunksRef.current.length) return
+        if (!chunksRef.current.length) {
+          if (activeRef.current) setIsListening(true)
+          return
+        }
         setIsListening(false)
         setIsProcessing(true)
         if (onInterim) onInterim('⏳ Transcribing…')
 
+        let audioCtx
         try {
           const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
           const arrayBuffer = await blob.arrayBuffer()
-          const audioCtx = new AudioContext({ sampleRate: 16000 })
+          audioCtx = new AudioContext({ sampleRate: 16000 })
           const decoded = await audioCtx.decodeAudioData(arrayBuffer)
           const float32 = decoded.getChannelData(0)
 
@@ -160,11 +195,10 @@ function useWhisperVoice(onResult, onInterim) {
           if (onInterim) onInterim('')
         } finally {
           setIsProcessing(false)
-          audioCtx?.close?.()
+          try { audioCtx?.close() } catch {}
         }
 
-        // If still active, record next chunk
-        if (activeRef.current) {
+        if (activeRef.current && streamRef.current) {
           chunksRef.current = []
           const newRecorder = new MediaRecorder(streamRef.current)
           mediaRecorderRef.current = newRecorder
@@ -179,7 +213,6 @@ function useWhisperVoice(onResult, onInterim) {
       }
 
       recorder.start()
-      // Stop after 5s to get a chunk, then restart
       setTimeout(() => {
         if (activeRef.current && recorder.state === 'recording') recorder.stop()
       }, 5000)
@@ -194,7 +227,7 @@ function useWhisperVoice(onResult, onInterim) {
   return { isListening: isListening || isProcessing, supported: true, startListening, stopListening, isProcessing }
 }
 
-// ─── Web Speech API hook ──────────────────────────────────────────────────────
+// ─── Web Speech API hook ────────────────────────────────────────────────────────
 function useWebSpeechVoice(onResult, onInterim) {
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef(null)
@@ -265,10 +298,33 @@ function useWebSpeechVoice(onResult, onInterim) {
   return { isListening, supported: hasSpeechRecognition(), startListening, stopListening }
 }
 
-// ─── Public hook — auto-selects best engine ───────────────────────────────────
+// ─── Public hook — auto-selects best engine ────────────────────────────────────
+// Starts with 'detecting' state, resolves after async Brave check + speech test.
 export function useVoiceInput(onResult, onInterim) {
-  // Use Whisper if: Brave browser, OR Web Speech API not available
-  const useWhisper = detectBrave() || !hasSpeechRecognition()
+  // 'pending' | 'whisper' | 'webspeech'
+  const [engine, setEngine] = useState('pending')
+
+  useEffect(() => {
+    let cancelled = false
+    async function detect() {
+      const brave = await checkBrave()
+      if (brave) {
+        if (!cancelled) setEngine('whisper')
+        return
+      }
+      if (!hasSpeechRecognition()) {
+        if (!cancelled) setEngine('whisper')
+        return
+      }
+      // Web Speech API present — verify it actually works (Brave blocks at runtime)
+      const works = await testWebSpeechWorks()
+      if (!cancelled) setEngine(works ? 'webspeech' : 'whisper')
+    }
+    detect()
+    return () => { cancelled = true }
+  }, [])
+
+  const useWhisper = engine === 'whisper' || engine === 'pending'
 
   const whisper = useWhisperVoice(
     useWhisper ? onResult : () => {},
@@ -279,8 +335,11 @@ export function useVoiceInput(onResult, onInterim) {
     !useWhisper ? onInterim : () => {}
   )
 
-  if (useWhisper) {
-    return { ...whisper, engine: 'whisper' }
+  if (engine === 'pending') {
+    // While detecting, return a neutral state — mic button will still work
+    // after detection completes (state update triggers re-render)
+    return { isListening: false, supported: true, startListening: () => {}, stopListening: () => {}, isProcessing: false, engine: 'pending' }
   }
+  if (engine === 'whisper') return { ...whisper, engine: 'whisper' }
   return { ...webSpeech, engine: 'webspeech' }
 }
