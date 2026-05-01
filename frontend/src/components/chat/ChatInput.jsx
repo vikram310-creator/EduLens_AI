@@ -10,17 +10,38 @@ const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
 export default function ChatInput() {
   const { requireAuth } = useAuth()
   const [input, setInput] = useState('')
+  const [interimText, setInterimText] = useState('')
   const [attachedImages, setAttachedImages] = useState([])
   const { sendMessage, isStreaming, setModel } = useChatStore()
   const textareaRef = useRef(null)
   const fileInputRef = useRef(null)
+  const committedRef = useRef('')
 
+  // Called when speech recognition finalizes a word/phrase
   const handleVoiceResult = useCallback((transcript) => {
-    setInput((prev) => prev ? prev + ' ' + transcript : transcript)
+    setInput((prev) => {
+      const updated = prev ? prev + ' ' + transcript : transcript
+      committedRef.current = updated
+      return updated
+    })
+    setInterimText('')
     textareaRef.current?.focus()
+    // Auto-resize textarea
+    const el = textareaRef.current
+    if (el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 180) + 'px' }
   }, [])
 
-  const { isListening, supported, startListening, stopListening } = useVoiceInput(handleVoiceResult)
+  // Called with live interim (unfinalized) text while user is speaking
+  const handleInterim = useCallback((interim) => {
+    setInterimText(interim)
+  }, [])
+
+  const { isListening, supported, startListening, stopListening } = useVoiceInput(handleVoiceResult, handleInterim)
+
+  // The displayed value combines committed text + live interim preview
+  const displayValue = isListening && interimText
+    ? (input ? input + ' ' + interimText : interimText)
+    : input
 
   const handleSend = () => {
     const trimmed = input.trim()
@@ -28,7 +49,10 @@ export default function ChatInput() {
     requireAuth(() => {
       sendMessage(trimmed, attachedImages)
       setInput('')
+      setInterimText('')
+      committedRef.current = ''
       setAttachedImages([])
+      if (isListening) stopListening()
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
     })
   }
@@ -38,7 +62,11 @@ export default function ChatInput() {
   }
 
   const handleChange = (e) => {
-    setInput(e.target.value)
+    // If user manually edits, sync to input state
+    const val = e.target.value
+    setInput(val)
+    committedRef.current = val
+    setInterimText('')
     const el = textareaRef.current
     if (el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 180) + 'px' }
   }
@@ -65,7 +93,7 @@ export default function ChatInput() {
   const removeImage = (id) => setAttachedImages((prev) => prev.filter((img) => img.id !== id))
 
   const canSend = (input.trim().length > 0 || attachedImages.length > 0) && !isStreaming
-  const hasInput = input.length > 0
+  const hasInput = input.length > 0 || interimText.length > 0
 
   return (
     <div className="px-4 pb-5 pt-2 mobile-safe-bottom">
@@ -139,17 +167,33 @@ export default function ChatInput() {
         >
           <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
 
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            placeholder={isListening ? '🎙 Listening…' : 'Ask anything…'}
-            rows={1}
-            disabled={isStreaming}
-            className="flex-1 resize-none bg-transparent px-3 py-2.5 text-sm text-white/90 placeholder-white/18 outline-none"
-            style={{ minHeight: '44px', maxHeight: '180px', lineHeight: '1.55' }}
-          />
+          <div className="relative flex-1">
+            <textarea
+              ref={textareaRef}
+              value={displayValue}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              placeholder={isListening ? '🎙 Speak now — typing as you talk…' : 'Ask anything…'}
+              rows={1}
+              disabled={isStreaming}
+              className="w-full resize-none bg-transparent px-3 py-2.5 text-sm outline-none"
+              style={{
+                minHeight: '44px', maxHeight: '180px', lineHeight: '1.55',
+                color: isListening && interimText ? 'rgba(196,181,253,0.7)' : 'rgba(255,255,255,0.9)',
+              }}
+            />
+            {isListening && (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0.4, 1, 0.4] }}
+                transition={{ repeat: Infinity, duration: 1.2 }}
+                className="absolute right-3 bottom-3 text-[10px] font-semibold tracking-wider"
+                style={{ color: '#f87171' }}
+              >
+                ● REC
+              </motion.span>
+            )}
+          </div>
 
           <div className="flex shrink-0 items-center gap-1 pb-1.5 pr-1">
             <motion.button
@@ -174,6 +218,7 @@ export default function ChatInput() {
               <motion.button
                 whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                 onClick={isListening ? stopListening : startListening}
+                title={isListening ? 'Stop recording' : 'Voice input — types as you speak'}
                 className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all ${
                   isListening
                     ? 'bg-red-500/18 text-red-400 border border-red-500/30'
@@ -181,8 +226,16 @@ export default function ChatInput() {
                 }`}
               >
                 {isListening
-                  ? <motion.div animate={{ scale: [1,1.25,1] }} transition={{ repeat: Infinity, duration: 0.85 }}><Square size={12} fill="currentColor"/></motion.div>
-                  : <Mic size={14} />}
+                  ? (
+                    <motion.div
+                      animate={{ scale: [1, 1.3, 1] }}
+                      transition={{ repeat: Infinity, duration: 0.8 }}
+                    >
+                      <Square size={12} fill="currentColor"/>
+                    </motion.div>
+                  )
+                  : <Mic size={14} />
+                }
               </motion.button>
             )}
 

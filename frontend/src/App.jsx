@@ -157,11 +157,21 @@ export default function App() {
               <div className="flex w-full max-w-lg flex-col items-center gap-10">
                 {/* Hero */}
                 <div className="text-center">
-                  <motion.div animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
-                    className="mb-5 inline-flex h-[72px] w-[72px] items-center justify-center rounded-[22px] border border-violet-500/25 bg-gradient-to-br from-violet-600/25 to-indigo-700/20 text-[32px] shadow-2xl shadow-violet-900/30">
+                  <motion.button
+                    onClick={() => setView('landing')}
+                    animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+                    title="Back to home"
+                    className="mb-5 inline-flex h-[72px] w-[72px] items-center justify-center rounded-[22px] border border-violet-500/25 bg-gradient-to-br from-violet-600/25 to-indigo-700/20 text-[32px] shadow-2xl shadow-violet-900/30 hover:border-violet-400/50 hover:shadow-violet-700/40 transition-all duration-200 cursor-pointer"
+                  >
                     ⚡
-                  </motion.div>
-                  <h1 className="font-display text-4xl font-800 tracking-tight text-white">EduLens_AI</h1>
+                  </motion.button>
+                  <h1
+                    onClick={() => setView('landing')}
+                    className="font-display text-4xl font-800 tracking-tight text-white cursor-pointer hover:text-violet-300 transition-colors duration-200"
+                    title="Back to home"
+                  >
+                    EduLens_AI
+                  </h1>
                   <p className="mt-2 text-[15px] text-white/30">
                     {user ? 'Choose a mode to begin your session.' : 'Sign in to start chatting with AI.'}
                   </p>
