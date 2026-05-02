@@ -16,37 +16,57 @@ const PERSONAS = [
   { id: 'analyst',   icon: '◎', label: 'Analyst',   desc: 'Data-driven strategist',     color: 'from-rose-600/20 to-pink-700/10',    ring: 'ring-rose-500/20'   },
 ]
 
-// Simple hash-based view: 'landing' | 'app'
+// ── Persist which view the user was on ────────────────────────────────────────
+const VIEW_KEY = 'edulens_view'
+
 function getInitialView() {
-  if (typeof window !== 'undefined' && window.location.hash === '#app') return 'app'
-  return 'landing'
+  try {
+    return localStorage.getItem(VIEW_KEY) || 'landing'
+  } catch {
+    return 'landing'
+  }
 }
 
 export default function App() {
-  const { loadSessions, activeSessionId, createSession } = useChatStore()
+  const { loadSessions, activeSessionId, createSession, clearSessionState } = useChatStore()
   const { user, loading, requireAuth, setShowAuth, setAuthIntent } = useAuth()
-  const [view, setView]               = useState(getInitialView)
+  const [view, setView] = useState(getInitialView)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
-  // Keep URL hash in sync
-  useEffect(() => {
-    window.location.hash = view === 'app' ? '#app' : ''
-  }, [view])
+  // Persist view to localStorage
+  const navigateTo = (v) => {
+    try { localStorage.setItem(VIEW_KEY, v) } catch {}
+    setView(v)
+  }
 
-  // Load sessions when user logs in or enters app
+  // ── On mount: if user is already logged in, take them straight to the app ──
   useEffect(() => {
-    if (user && view === 'app') loadSessions()
-  }, [user, view])
-
-  // If user is already logged in and lands on landing, keep them on landing
-  // (they consciously navigated there) — only auto-enter if hash was #app
-  useEffect(() => {
-    if (!loading && user && window.location.hash === '#app') {
-      setView('app')
+    if (!loading && user) {
+      // User is logged in — always go to app (unless they explicitly went to landing)
+      const savedView = localStorage.getItem(VIEW_KEY) || 'landing'
+      if (savedView === 'app') {
+        setView('app')
+        loadSessions()
+      }
     }
-  }, [loading, user])
+  }, [loading, user]) // eslint-disable-line
 
-  // ── Loading spinner (only while verifying token, no cached user) ──────────
+  // ── When user logs in during session, load their data and go to app ─────────
+  useEffect(() => {
+    if (user && view === 'app') {
+      loadSessions()
+    }
+  }, [user]) // eslint-disable-line
+
+  // ── When user logs out, clear session state and go to landing ───────────────
+  useEffect(() => {
+    if (!loading && !user) {
+      clearSessionState()
+      navigateTo('landing')
+    }
+  }, [user, loading]) // eslint-disable-line
+
+  // ── Loading spinner ─────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="app-bg flex h-screen w-screen items-center justify-center">
@@ -56,16 +76,20 @@ export default function App() {
     )
   }
 
-  // ── Landing page ─────────────────────────────────────────────────────────
+  // ── Landing page ──────────────────────────────────────────────────────────
   if (view === 'landing') {
     return (
       <>
         <div style={{ height: '100vh', overflowY: 'auto', overflowX: 'hidden' }}>
           <LandingPage onEnterApp={() => {
-            if (user) { setView('app'); loadSessions() }
-            else {
-              // Set intent so after login they go straight to the app
-              setAuthIntent(() => () => { setView('app'); loadSessions() })
+            if (user) {
+              navigateTo('app')
+              loadSessions()
+            } else {
+              setAuthIntent(() => () => {
+                navigateTo('app')
+                loadSessions()
+              })
               setShowAuth(true)
             }
           }} />
@@ -75,12 +99,9 @@ export default function App() {
     )
   }
 
-  // ── Chat App ─────────────────────────────────────────────────────────────
+  // ── Chat App ──────────────────────────────────────────────────────────────
   const closeMobileSidebar = () => setMobileSidebarOpen(false)
-
-  const handlePersonaClick = (personaId) => {
-    requireAuth(() => createSession(personaId))
-  }
+  const handlePersonaClick = (personaId) => requireAuth(() => createSession(personaId))
 
   return (
     <div className="app-bg noise flex h-screen w-screen overflow-hidden">
@@ -93,7 +114,7 @@ export default function App() {
       {/* Desktop sidebar */}
       {user && (
         <div className="hidden lg:flex h-full flex-shrink-0">
-          <Sidebar onBackToLanding={() => setView('landing')} />
+          <Sidebar onBackToLanding={() => navigateTo('landing')} />
         </div>
       )}
 
@@ -113,7 +134,7 @@ export default function App() {
           <motion.div key="mobile-sidebar" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
             className="fixed inset-y-0 left-0 z-40 lg:hidden" style={{ width: '268px' }}>
-            <Sidebar onNavigate={closeMobileSidebar} onBackToLanding={() => { setView('landing'); closeMobileSidebar() }} />
+            <Sidebar onNavigate={closeMobileSidebar} onBackToLanding={() => { navigateTo('landing'); closeMobileSidebar() }} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -146,7 +167,7 @@ export default function App() {
               {/* Desktop top-right */}
               {user && (
                 <div className="absolute top-4 right-4 hidden lg:flex items-center gap-2">
-                  <button onClick={() => setView('landing')}
+                  <button onClick={() => navigateTo('landing')}
                     className="text-xs px-3 py-1.5 rounded-lg border border-white/8 text-white/40 hover:text-white/70 hover:border-white/15 transition">
                     ← Back to home
                   </button>
@@ -158,7 +179,7 @@ export default function App() {
                 {/* Hero */}
                 <div className="text-center">
                   <motion.button
-                    onClick={() => setView('landing')}
+                    onClick={() => navigateTo('landing')}
                     animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
                     title="Back to home"
                     className="mb-5 inline-flex h-[72px] w-[72px] items-center justify-center rounded-[22px] border border-violet-500/25 bg-gradient-to-br from-violet-600/25 to-indigo-700/20 text-[32px] shadow-2xl shadow-violet-900/30 hover:border-violet-400/50 hover:shadow-violet-700/40 transition-all duration-200 cursor-pointer"
@@ -166,7 +187,7 @@ export default function App() {
                     ⚡
                   </motion.button>
                   <h1
-                    onClick={() => setView('landing')}
+                    onClick={() => navigateTo('landing')}
                     className="font-display text-4xl font-800 tracking-tight text-white cursor-pointer hover:text-violet-300 transition-colors duration-200"
                     title="Back to home"
                   >

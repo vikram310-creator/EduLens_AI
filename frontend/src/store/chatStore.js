@@ -5,24 +5,48 @@ const STREAM_DELAY_MS = 28
 
 const getToken = () => localStorage.getItem('token')
 
+// ── Persist active session + model across refreshes ───────────────────────────
+const SESSION_KEY = 'edulens_active_session'
+const MODEL_KEY   = 'edulens_model'
+
+const persistedSessionId = localStorage.getItem(SESSION_KEY) || null
+const persistedModel     = localStorage.getItem(MODEL_KEY) || 'llama-3.1-8b-instant'
+
 export const useChatStore = create((set, get) => ({
   sessions: [],
-  activeSessionId: null,
+  activeSessionId: persistedSessionId,
   messages: [],
   isStreaming: false,
   streamingContent: '',
-  model: 'llama-3.1-8b-instant',
+  model: persistedModel,
   totalTokens: 0,
 
-  setModel: (model) => set({ model }),
+  setModel: (model) => {
+    localStorage.setItem(MODEL_KEY, model)
+    set({ model })
+  },
 
   loadSessions: async () => {
     const token = getToken()
     if (!token) { set({ sessions: [] }); return }
     try {
       const { data } = await api.get('/sessions', { headers: { Authorization: `Bearer ${token}` } })
-      set({ sessions: Array.isArray(data) ? data : data.sessions || [] })
-    } catch { set({ sessions: [] }) }
+      const sessions = Array.isArray(data) ? data : data.sessions || []
+      set({ sessions })
+
+      // Auto-restore the last active session if it still exists
+      const { activeSessionId } = get()
+      if (activeSessionId && sessions.find(s => s.id === activeSessionId)) {
+        // Session still valid — load its messages
+        get().setActiveSession(activeSessionId)
+      } else if (activeSessionId && !sessions.find(s => s.id === activeSessionId)) {
+        // Stored session no longer exists (deleted) — clear it
+        localStorage.removeItem(SESSION_KEY)
+        set({ activeSessionId: null, messages: [] })
+      }
+    } catch {
+      set({ sessions: [] })
+    }
   },
 
   createSession: async (systemPrompt = 'assistant') => {
@@ -31,15 +55,21 @@ export const useChatStore = create((set, get) => ({
       { system_prompt: systemPrompt },
       { headers: { Authorization: `Bearer ${token}` } }
     )
+    localStorage.setItem(SESSION_KEY, data.id)
     set((s) => ({ sessions: [data, ...s.sessions], activeSessionId: data.id, messages: [] }))
     return data
   },
 
   setActiveSession: async (id) => {
+    localStorage.setItem(SESSION_KEY, id)
     set({ activeSessionId: id, messages: [], streamingContent: '' })
     const token = getToken()
-    const { data } = await api.get(`/chat/${id}/messages`, { headers: { Authorization: `Bearer ${token}` } })
-    set({ messages: Array.isArray(data) ? data : data.messages || [] })
+    try {
+      const { data } = await api.get(`/chat/${id}/messages`, { headers: { Authorization: `Bearer ${token}` } })
+      set({ messages: Array.isArray(data) ? data : data.messages || [] })
+    } catch {
+      set({ messages: [] })
+    }
   },
 
   renameSession: async (id, title) => {
@@ -54,10 +84,22 @@ export const useChatStore = create((set, get) => ({
     const { activeSessionId, sessions } = get()
     const remaining = sessions.filter((s) => s.id !== id)
     const next = activeSessionId === id ? (remaining[0]?.id || null) : activeSessionId
+
+    if (next) {
+      localStorage.setItem(SESSION_KEY, next)
+    } else {
+      localStorage.removeItem(SESSION_KEY)
+    }
+
     set({ sessions: remaining, activeSessionId: next, messages: next ? get().messages : [] })
+
     if (next && activeSessionId === id) {
-      const { data } = await api.get(`/chat/${next}/messages`, { headers: { Authorization: `Bearer ${token}` } })
-      set({ messages: Array.isArray(data) ? data : data.messages || [] })
+      try {
+        const { data } = await api.get(`/chat/${next}/messages`, { headers: { Authorization: `Bearer ${token}` } })
+        set({ messages: Array.isArray(data) ? data : data.messages || [] })
+      } catch {
+        set({ messages: [] })
+      }
     }
   },
 
@@ -160,5 +202,10 @@ export const useChatStore = create((set, get) => ({
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a'); a.href = url; a.download = `chat-${activeSessionId.slice(0, 8)}.json`; a.click()
     URL.revokeObjectURL(url)
+  },
+
+  clearSessionState: () => {
+    localStorage.removeItem(SESSION_KEY)
+    set({ sessions: [], activeSessionId: null, messages: [], streamingContent: '', totalTokens: 0 })
   },
 }))
