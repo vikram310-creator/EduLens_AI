@@ -339,7 +339,7 @@ export default function Sidebar({ onNavigate, onBackToLanding }) {
             {/* Profile */}
             {user && (
               <div className="mt-1 rounded-xl overflow-visible" style={{ border: '1px solid var(--border)', background: 'var(--surface-3)' }}>
-                <ProfileDropdown />
+                <ProfileDropdown onAbout={onBackToLanding} />
               </div>
             )}
           </motion.div>

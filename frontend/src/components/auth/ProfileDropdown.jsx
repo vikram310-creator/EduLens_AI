@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LogOut, Palette, Check, ChevronDown } from 'lucide-react'
+import { LogOut, Palette, Check, ChevronDown, Info } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 const THEMES = [
@@ -10,7 +10,7 @@ const THEMES = [
   { id: 'light',    label: 'Light',    preview: ['#f5f5f8', '#ffffff',  '#7c3aed'] },
 ]
 
-export default function ProfileDropdown({ compact = false }) {
+export default function ProfileDropdown({ compact = false, onAbout }) {
   const { user, logout, updateTheme } = useAuth()
   const [open, setOpen]             = useState(false)
   const [showThemes, setShowThemes] = useState(false)
@@ -144,7 +144,16 @@ export default function ProfileDropdown({ compact = false }) {
 
               <div className="my-1 h-px" style={{ background: 'var(--border)' }} />
 
+              {/* About */}
               <button
+                onClick={() => { onAbout?.(); setOpen(false) }}
+                className="dropdown-item"
+              >
+                <Info size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+                <span className="flex-1">About</span>
+              </button>
+
+              <div className="my-1 h-px" style={{ background: 'var(--border)' }} />
                 onClick={() => { logout(); setOpen(false) }}
                 className="dropdown-item dropdown-item-danger"
               >

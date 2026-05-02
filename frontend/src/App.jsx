@@ -161,7 +161,7 @@ export default function App() {
                     </svg>
                   </button>
                 ) : <div />}
-                {user && <ProfileDropdown />}
+                {user && <ProfileDropdown onAbout={() => navigateTo('landing')} />}
               </div>
 
               {/* Desktop top-right — removed per design update */}
