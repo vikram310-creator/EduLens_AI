@@ -154,6 +154,8 @@ export default function ProfileDropdown({ compact = false, onAbout }) {
               </button>
 
               <div className="my-1 h-px" style={{ background: 'var(--border)' }} />
+
+              <button
                 onClick={() => { logout(); setOpen(false) }}
                 className="dropdown-item dropdown-item-danger"
               >
