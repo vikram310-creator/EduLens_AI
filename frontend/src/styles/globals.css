@@ -414,3 +414,78 @@ button, label, nav { user-select: none; }
 @media (max-width: 640px) {
   .h-9.w-9 { min-width: 36px; min-height: 36px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES — fix hardcoded dark values
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Chat input box */
+html[data-theme="light"] .bg-\[\#111118\] { background: var(--surface-2) !important; }
+html[data-theme="light"] .bg-\[\#13131e\] { background: var(--surface-3) !important; }
+html[data-theme="light"] .bg-\[\#1a1a26\] { background: var(--surface-4) !important; }
+html[data-theme="light"] .bg-\[\#0e0e18\] { background: var(--surface-3) !important; }
+html[data-theme="light"] .bg-\[\#1c1c2e\] { background: var(--surface-4) !important; }
+html[data-theme="light"] .bg-\[\#080810\] { background: var(--surface)   !important; }
+html[data-theme="light"] .bg-\[\#0f0f1a\] { background: var(--surface-2) !important; }
+
+/* Text colors in light mode */
+html[data-theme="light"] .text-white\/90  { color: var(--text-1) !important; }
+html[data-theme="light"] .text-white\/70  { color: var(--text-2) !important; }
+html[data-theme="light"] .text-white\/50  { color: var(--text-2) !important; }
+html[data-theme="light"] .text-white\/40  { color: var(--text-3) !important; }
+html[data-theme="light"] .text-white\/30  { color: var(--text-3) !important; }
+html[data-theme="light"] .text-white\/22  { color: var(--text-3) !important; }
+html[data-theme="light"] .text-white\/20  { color: var(--text-3) !important; }
+html[data-theme="light"] .text-white\/18  { color: var(--text-3) !important; }
+html[data-theme="light"] .text-white\/15  { color: var(--text-3) !important; }
+html[data-theme="light"] .text-white\/14  { color: var(--text-3) !important; }
+html[data-theme="light"] .text-white { color: var(--text-1) !important; }
+
+/* Borders */
+html[data-theme="light"] .border-white\/6  { border-color: var(--border)        !important; }
+html[data-theme="light"] .border-white\/8  { border-color: var(--border)        !important; }
+html[data-theme="light"] .border-white\/10 { border-color: var(--border-strong) !important; }
+html[data-theme="light"] .border-white\/12 { border-color: var(--border-strong) !important; }
+html[data-theme="light"] .border-white\/5  { border-color: var(--border)        !important; }
+
+/* Hover backgrounds */
+html[data-theme="light"] .hover\:bg-white\/6:hover  { background: var(--surface-3) !important; }
+html[data-theme="light"] .hover\:bg-white\/8:hover  { background: var(--surface-4) !important; }
+html[data-theme="light"] .hover\:bg-white\/10:hover { background: var(--surface-4) !important; }
+html[data-theme="light"] .bg-white\/4  { background: var(--surface-3) !important; }
+html[data-theme="light"] .bg-white\/5  { background: var(--surface-3) !important; }
+html[data-theme="light"] .bg-white\/6  { background: var(--surface-3) !important; }
+html[data-theme="light"] .bg-white\/7  { background: var(--surface-3) !important; }
+
+/* User message bubble in light mode */
+html[data-theme="light"] .rounded-2xl.rounded-tr-sm {
+  border-color: rgba(124,58,237,0.2) !important;
+}
+
+/* Code blocks in light mode */
+html[data-theme="light"] .prose-chat pre { background: var(--code-bg) !important; }
+html[data-theme="light"] [class*="SyntaxHighlighter"] { background: var(--code-bg) !important; }
+
+/* Prose text in light mode */
+html[data-theme="light"] .prose-chat,
+html[data-theme="light"] .prose-chat p,
+html[data-theme="light"] .prose-chat li,
+html[data-theme="light"] .prose-chat td { color: var(--text-1) !important; }
+
+html[data-theme="light"] .prose-chat h1,
+html[data-theme="light"] .prose-chat h2,
+html[data-theme="light"] .prose-chat h3 { color: var(--text-1) !important; }
+
+html[data-theme="light"] .prose-chat a   { color: var(--accent) !important; }
+html[data-theme="light"] .prose-chat code { color: var(--accent-mid) !important; }
+html[data-theme="light"] .prose-chat blockquote {
+  border-left-color: var(--accent) !important;
+  color: var(--text-2) !important;
+}
+
+/* Ambient blobs — too strong in light */
+html[data-theme="light"] .bg-violet-900\/8  { opacity: 0.03 !important; }
+html[data-theme="light"] .bg-indigo-900\/6  { opacity: 0.02 !important; }
+
+/* Footer disclaimer text */
+html[data-theme="light"] .text-white\/14 { color: var(--text-3) !important; }
