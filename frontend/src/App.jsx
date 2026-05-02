@@ -28,7 +28,7 @@ function getInitialView() {
 }
 
 export default function App() {
-  const { loadSessions, activeSessionId, createSession, clearSessionState } = useChatStore()
+  const { loadSessions, activeSessionId, createSession, clearSessionState, clearActiveSession } = useChatStore()
   const { user, loading, requireAuth, setShowAuth, setAuthIntent } = useAuth()
   const [view, setView] = useState(getInitialView)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
@@ -114,7 +114,7 @@ export default function App() {
       {/* Desktop sidebar */}
       {user && (
         <div className="hidden lg:flex h-full flex-shrink-0">
-          <Sidebar onBackToLanding={() => navigateTo('landing')} />
+          <Sidebar onBackToLanding={() => clearActiveSession()} />
         </div>
       )}
 
@@ -134,7 +134,7 @@ export default function App() {
           <motion.div key="mobile-sidebar" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
             className="fixed inset-y-0 left-0 z-40 lg:hidden" style={{ width: '268px' }}>
-            <Sidebar onNavigate={closeMobileSidebar} onBackToLanding={() => { navigateTo('landing'); closeMobileSidebar() }} />
+            <Sidebar onNavigate={closeMobileSidebar} onBackToLanding={() => { clearActiveSession(); closeMobileSidebar() }} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -164,32 +164,23 @@ export default function App() {
                 {user && <ProfileDropdown />}
               </div>
 
-              {/* Desktop top-right */}
-              {user && (
-                <div className="absolute top-4 right-4 hidden lg:flex items-center gap-2">
-                  <button onClick={() => navigateTo('landing')}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-white/8 text-white/40 hover:text-white/70 hover:border-white/15 transition">
-                    ← Back to home
-                  </button>
-                  <ProfileDropdown />
-                </div>
-              )}
+              {/* Desktop top-right — removed per design update */}
 
               <div className="flex w-full max-w-lg flex-col items-center gap-10">
                 {/* Hero */}
                 <div className="text-center">
                   <motion.button
-                    onClick={() => navigateTo('landing')}
+                    onClick={() => clearActiveSession()}
                     animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
-                    title="Back to home"
+                    title="Back to mode picker"
                     className="mb-5 inline-flex h-[72px] w-[72px] items-center justify-center rounded-[22px] border border-violet-500/25 bg-gradient-to-br from-violet-600/25 to-indigo-700/20 text-[32px] shadow-2xl shadow-violet-900/30 hover:border-violet-400/50 hover:shadow-violet-700/40 transition-all duration-200 cursor-pointer"
                   >
                     ⚡
                   </motion.button>
                   <h1
-                    onClick={() => navigateTo('landing')}
+                    onClick={() => clearActiveSession()}
                     className="font-display text-4xl font-800 tracking-tight text-white cursor-pointer hover:text-violet-300 transition-colors duration-200"
-                    title="Back to home"
+                    title="Back to mode picker"
                   >
                     EduLens_AI
                   </h1>

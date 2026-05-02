@@ -51,6 +51,13 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem(TOKEN_KEY)
     if (!token) { setLoading(false); return }
 
+    // If we already have a cached user, show them immediately and verify silently
+    const cachedUser = initial.user
+    if (cachedUser) {
+      setUser(cachedUser)
+      setLoading(false)
+    }
+
     api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } })
       .then(({ data }) => {
         // Server returned fresh user — update cache and state
@@ -62,13 +69,13 @@ export function AuthProvider({ children }) {
       .catch((err) => {
         const status = err.response?.status
         if (status === 401) {
-          // Token is genuinely invalid — clear everything
+          // Token is genuinely invalid — only log out on explicit 401
           localStorage.removeItem(TOKEN_KEY)
           localStorage.removeItem(USER_KEY)
           setUser(null)
         }
-        // Any other error (network, 500, timeout) → keep cached user, stay logged in
-        // The background verify simply failed; we'll try again next time
+        // Any other error (network, 500, timeout, CORS) → keep cached user logged in
+        // This prevents logout on refresh due to temporary network issues
       })
       .finally(() => setLoading(false))
   }, [])

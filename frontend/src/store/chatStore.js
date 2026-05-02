@@ -204,6 +204,11 @@ export const useChatStore = create((set, get) => ({
     URL.revokeObjectURL(url)
   },
 
+  clearActiveSession: () => {
+    localStorage.removeItem(SESSION_KEY)
+    set({ activeSessionId: null, messages: [], streamingContent: '', totalTokens: 0 })
+  },
+
   clearSessionState: () => {
     localStorage.removeItem(SESSION_KEY)
     set({ sessions: [], activeSessionId: null, messages: [], streamingContent: '', totalTokens: 0 })

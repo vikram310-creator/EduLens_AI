@@ -160,12 +160,15 @@ export default function ProfileDropdown({ compact = false }) {
 }
 
 export function Avatar({ user, initials, size = 32 }) {
-  if (user?.avatar_url) {
+  const [imgError, setImgError] = useState(false)
+
+  if (user?.avatar_url && !imgError) {
     return (
       <img
         src={user.avatar_url}
         alt={user.name || 'Avatar'}
         referrerPolicy="no-referrer"
+        onError={() => setImgError(true)}
         style={{ width: size, height: size, border: '1px solid var(--border)', flexShrink: 0 }}
         className="rounded-full object-cover"
       />
