@@ -2,7 +2,8 @@ import os
 import uuid
 import httpx
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Header, status
+from typing import Optional
 from sqlalchemy.orm import Session as DBSession
 from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
@@ -174,9 +175,9 @@ async def google_callback(body: GoogleCallbackBody, db: DBSession = Depends(get_
 
 # ── Profile ──────────────────────────────────────────────────────────────────
 @router.get("/auth/me")
-def me(authorization: str = "", db: DBSession = Depends(get_db)):
+def me(authorization: Optional[str] = Header(None, alias="Authorization"), db: DBSession = Depends(get_db)):
     """Validate token and return current user."""
-    if not authorization.startswith("Bearer "):
+    if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing token")
     uid  = decode_token(authorization[7:])
     user = db.query(User).filter(User.id == uid).first()
@@ -192,8 +193,8 @@ def me(authorization: str = "", db: DBSession = Depends(get_db)):
     }
 
 @router.patch("/auth/theme")
-def update_theme(body: UpdateThemeBody, authorization: str = "", db: DBSession = Depends(get_db)):
-    if not authorization.startswith("Bearer "):
+def update_theme(body: UpdateThemeBody, authorization: Optional[str] = Header(None, alias="Authorization"), db: DBSession = Depends(get_db)):
+    if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing token")
     uid  = decode_token(authorization[7:])
     user = db.query(User).filter(User.id == uid).first()
@@ -204,8 +205,8 @@ def update_theme(body: UpdateThemeBody, authorization: str = "", db: DBSession =
     return {"theme": user.theme}
 
 @router.patch("/auth/profile")
-def update_profile(body: UpdateProfileBody, authorization: str = "", db: DBSession = Depends(get_db)):
-    if not authorization.startswith("Bearer "):
+def update_profile(body: UpdateProfileBody, authorization: Optional[str] = Header(None, alias="Authorization"), db: DBSession = Depends(get_db)):
+    if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing token")
     uid  = decode_token(authorization[7:])
     user = db.query(User).filter(User.id == uid).first()
