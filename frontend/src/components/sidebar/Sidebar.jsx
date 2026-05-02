@@ -5,7 +5,7 @@ import { useChatStore } from '../../store/chatStore'
 import { useAuth } from '../../context/AuthContext'
 import ProfileDropdown from '../auth/ProfileDropdown'
 
-export default function Sidebar({ onNavigate, onBackToLanding }) {
+export default function Sidebar({ onNavigate, onBackToLanding, onAbout }) {
   const {
     sessions, activeSessionId, createSession,
     setActiveSession, renameSession, deleteSession,
@@ -339,7 +339,7 @@ export default function Sidebar({ onNavigate, onBackToLanding }) {
             {/* Profile */}
             {user && (
               <div className="mt-1 rounded-xl overflow-visible" style={{ border: '1px solid var(--border)', background: 'var(--surface-3)' }}>
-                <ProfileDropdown onAbout={onBackToLanding} />
+                <ProfileDropdown onAbout={onAbout || onBackToLanding} />
               </div>
             )}
           </motion.div>

@@ -114,7 +114,7 @@ export default function App() {
       {/* Desktop sidebar */}
       {user && (
         <div className="hidden lg:flex h-full flex-shrink-0">
-          <Sidebar onBackToLanding={() => clearActiveSession()} />
+          <Sidebar onBackToLanding={() => clearActiveSession()} onAbout={() => navigateTo('landing')} />
         </div>
       )}
 
@@ -134,7 +134,7 @@ export default function App() {
           <motion.div key="mobile-sidebar" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
             className="fixed inset-y-0 left-0 z-40 lg:hidden" style={{ width: '268px' }}>
-            <Sidebar onNavigate={closeMobileSidebar} onBackToLanding={() => { clearActiveSession(); closeMobileSidebar() }} />
+            <Sidebar onNavigate={closeMobileSidebar} onBackToLanding={() => { clearActiveSession(); closeMobileSidebar() }} onAbout={() => { navigateTo('landing'); closeMobileSidebar() }} />
           </motion.div>
         )}
       </AnimatePresence>
