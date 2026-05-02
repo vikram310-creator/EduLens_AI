@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useChatStore } from '../store/chatStore'
 import MessageBubble from '../components/chat/MessageBubble'
@@ -6,75 +6,128 @@ import ChatInput from '../components/chat/ChatInput'
 import TypingIndicator from '../components/chat/TypingIndicator'
 import ChatHeader from '../components/chat/ChatHeader'
 import StreamingBubble from '../components/chat/StreamingBubble'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, ChevronDown } from 'lucide-react'
 
-const SUGGESTIONS = [
-  { icon: '💡', text: 'Explain quantum computing simply' },
-  { icon: '🐍', text: 'Write a binary search in Python' },
-  { icon: '🎨', text: 'Design tips for dark mode UIs' },
-  { icon: '✍️', text: 'Help me write a cover letter' },
-]
+const PERSONA_SUGGESTIONS = {
+  assistant: [
+    { icon: '💡', text: 'Explain quantum computing simply' },
+    { icon: '🌍', text: 'What caused the 2008 financial crisis?' },
+    { icon: '🧩', text: 'Help me brainstorm a new side project' },
+    { icon: '📅', text: 'How should I structure my week?' },
+  ],
+  coder: [
+    { icon: '🐍', text: 'Write a binary search in Python' },
+    { icon: '⚡', text: 'Optimize this SQL query for performance' },
+    { icon: '🔒', text: 'What is JWT and how does it work?' },
+    { icon: '🐛', text: 'How do I debug a memory leak in Node.js?' },
+  ],
+  teacher: [
+    { icon: '🔬', text: "Explain photosynthesis like I'm 10" },
+    { icon: '📐', text: 'Walk me through the Pythagorean theorem' },
+    { icon: '🧠', text: 'What is cognitive load theory?' },
+    { icon: '🌐', text: 'How does the internet actually work?' },
+  ],
+  writer: [
+    { icon: '✍️', text: 'Help me write a compelling opening line' },
+    { icon: '📖', text: 'Give me 5 story hooks for a thriller' },
+    { icon: '💬', text: 'How do I write better dialogue?' },
+    { icon: '🎭', text: 'Help me develop my protagonist' },
+  ],
+  analyst: [
+    { icon: '📊', text: 'How do I do a SWOT analysis?' },
+    { icon: '📈', text: 'Explain P/E ratio in simple terms' },
+    { icon: '🎯', text: 'What KPIs should a SaaS track?' },
+    { icon: '🔍', text: 'How to spot bias in data analysis?' },
+  ],
+}
+
+const PERSONA_WELCOME = {
+  assistant: { emoji: '✦', title: 'How can I help?',  sub: "Ask me anything — I'm here to help." },
+  coder:     { emoji: '⌥', title: 'Ready to code',    sub: 'Share your code, error, or idea.' },
+  teacher:   { emoji: '◈', title: "Let's learn",      sub: 'What would you like to understand today?' },
+  writer:    { emoji: '✐', title: "Let's write",      sub: "I'll help you craft something great." },
+  analyst:   { emoji: '◎', title: "Let's analyse",    sub: 'Bring your data, question, or strategy.' },
+}
 
 export default function ChatPage({ onMenuOpen }) {
   const { messages, isStreaming, streamingContent, activeSessionId, sessions, totalTokens, sendMessage } = useChatStore()
   const bottomRef = useRef(null)
+  const scrollRef = useRef(null)
+  const [showJump, setShowJump] = useState(false)
+
+  const session     = sessions.find((s) => s.id === activeSessionId)
+  const personaId   = session?.system_prompt || 'assistant'
+  const isEmpty     = messages.length === 0 && !isStreaming
+  const welcome     = PERSONA_WELCOME[personaId] || PERSONA_WELCOME.assistant
+  const suggestions = PERSONA_SUGGESTIONS[personaId] || PERSONA_SUGGESTIONS.assistant
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, streamingContent])
 
-  const session = sessions.find((s) => s.id === activeSessionId)
-  const isEmpty = messages.length === 0 && !isStreaming
+  const handleScroll = () => {
+    const el = scrollRef.current
+    if (!el) return
+    setShowJump(el.scrollHeight - el.scrollTop - el.clientHeight > 200)
+  }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col" style={{ position: 'relative' }}>
       <ChatHeader session={session} totalTokens={totalTokens} onMenuOpen={onMenuOpen} />
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex max-w-2xl flex-col gap-7 px-5 py-8">
+      <div ref={scrollRef} onScroll={handleScroll} className="chat-scroll flex-1 overflow-y-auto">
+        <div className="mx-auto flex max-w-2xl flex-col gap-6 px-5 py-8">
 
-          {/* Empty state */}
           {isEmpty && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="flex flex-col items-center gap-9 py-10"
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, ease: [0.22,1,0.36,1] }}
+              className="flex flex-col items-center gap-10 py-8"
             >
               <div className="text-center">
                 <motion.div
-                  animate={{ y: [0, -6, 0] }}
+                  animate={{ y: [0,-7,0] }}
                   transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
-                  className="mb-5 inline-flex h-[72px] w-[72px] items-center justify-center rounded-[22px] border border-violet-500/20 bg-gradient-to-br from-violet-600/20 to-indigo-700/15 text-[32px] shadow-2xl shadow-violet-900/20"
+                  className="mb-5 inline-flex h-[76px] w-[76px] items-center justify-center rounded-[24px] border border-violet-500/20 bg-gradient-to-br from-violet-600/20 to-indigo-700/15 shadow-2xl shadow-violet-900/20"
+                  style={{ fontSize: '2rem' }}
                 >
-                  ⚡
+                  {welcome.emoji}
                 </motion.div>
-                <h2 className="font-display text-2xl font-700 text-white">What's on your mind?</h2>
-                <p className="mt-1.5 text-sm text-white/28">Ask anything — powered by Groq's ultra-fast inference</p>
+                <h2 className="font-display text-[1.7rem] font-800 tracking-tight text-white">{welcome.title}</h2>
+                <p className="mt-1.5 text-sm" style={{ color: 'var(--text-3)' }}>{welcome.sub}</p>
               </div>
 
-              {/* Suggestion grid */}
               <div className="grid w-full grid-cols-2 gap-2.5">
-                {SUGGESTIONS.map((s, i) => (
+                {suggestions.map((s, i) => (
                   <motion.button
                     key={s.text}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.12 + i * 0.07, ease: [0.22, 1, 0.36, 1] }}
-                    whileHover={{ scale: 1.025, backgroundColor: 'rgba(139,92,246,0.09)' }}
-                    whileTap={{ scale: 0.975 }}
+                    initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.18 + i*0.07, ease: [0.22,1,0.36,1] }}
+                    whileHover={{ scale: 1.025 }} whileTap={{ scale: 0.975 }}
                     onClick={() => sendMessage(s.text)}
-                    className="group flex items-start gap-3 rounded-xl border border-white/6 bg-white/[0.03] p-3.5 text-left transition-colors hover:border-violet-500/25"
+                    className="group flex items-start gap-3 rounded-xl border border-white/6 bg-white/[0.025] p-4 text-left transition-all hover:border-violet-500/25 hover:bg-violet-500/5"
                   >
                     <span className="mt-0.5 text-base leading-none">{s.icon}</span>
-                    <span className="text-[13px] leading-snug text-white/40 transition-colors group-hover:text-white/65">{s.text}</span>
+                    <span className="text-[13px] leading-snug transition-colors group-hover:text-white/75" style={{ color: 'var(--text-3)' }}>
+                      {s.text}
+                    </span>
                   </motion.button>
                 ))}
               </div>
+
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}
+                className="flex items-center gap-2 rounded-full border border-white/6 px-4 py-2"
+                style={{ background: 'var(--surface-3)' }}
+              >
+                <Sparkles size={11} className="text-violet-400" />
+                <span className="text-[11px] font-500" style={{ color: 'var(--text-3)' }}>
+                  Powered by Groq · Ultra-fast inference
+                </span>
+              </motion.div>
             </motion.div>
           )}
 
-          {/* Messages */}
           <AnimatePresence initial={false}>
             {messages.map((msg, i) => (
               <MessageBubble key={msg.id || i} message={msg} index={i} />
@@ -83,10 +136,25 @@ export default function ChatPage({ onMenuOpen }) {
 
           {isStreaming && streamingContent && <StreamingBubble content={streamingContent} />}
           {isStreaming && !streamingContent && <TypingIndicator />}
-
-          <div ref={bottomRef} className="h-1" />
+          <div ref={bottomRef} className="h-2" />
         </div>
       </div>
+
+      {/* Jump-to-bottom FAB */}
+      <AnimatePresence>
+        {showJump && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 8 }}
+            onClick={() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            style={{ position: 'absolute', bottom: 100, right: 20, zIndex: 20 }}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-violet-500/30 bg-violet-600/90 text-white shadow-lg shadow-violet-900/40 backdrop-blur-sm transition hover:bg-violet-500"
+          >
+            <ChevronDown size={16} />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       <ChatInput />
     </div>

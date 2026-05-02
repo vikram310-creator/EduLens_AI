@@ -310,17 +310,24 @@ export default function ChatInput() {
           </div>
         </motion.div>
 
-        {/* Footer note */}
-        <p className="mt-2 text-center text-[11px] text-white/14">
-          <span className="inline-flex items-center gap-1 opacity-90">
-            ⚠️ EduLens AI may produce inaccurate responses. Verify important information.
-            {!isDetecting && isWhisper && (
-              <span className="ml-1 rounded px-1 py-0.5 text-[9px] font-semibold" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}>
-                Voice: Whisper
-              </span>
-            )}
-          </span>
-        </p>
+        {/* Char counter + Footer note */}
+        <div className="mt-2 flex items-center justify-between px-0.5">
+          <p className="flex-1 text-center text-[11px] text-white/14">
+            <span className="inline-flex items-center gap-1 opacity-90">
+              ⚠️ EduLens AI may produce inaccurate responses. Verify important information.
+              {!isDetecting && isWhisper && (
+                <span className="ml-1 rounded px-1 py-0.5 text-[9px] font-semibold" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}>
+                  Voice: Whisper
+                </span>
+              )}
+            </span>
+          </p>
+          {input.length > 50 && (
+            <span className="shrink-0 text-[10px] tabular-nums" style={{ color: input.length > 3000 ? '#f87171' : 'rgba(255,255,255,0.18)' }}>
+              {input.length}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   )
