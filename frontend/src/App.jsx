@@ -39,10 +39,10 @@ export default function App() {
     setView(v)
   }
 
-  // ── On mount: if user is already logged in, take them straight to the app ──
+  // ── On mount: if user is already logged in, restore the saved view ──────────
   useEffect(() => {
     if (!loading && user) {
-      // User is logged in — always go to app (unless they explicitly went to landing)
+      // User is logged in — restore their last view (app or landing)
       const savedView = localStorage.getItem(VIEW_KEY) || 'landing'
       if (savedView === 'app') {
         setView('app')
@@ -59,10 +59,16 @@ export default function App() {
   }, [user]) // eslint-disable-line
 
   // ── When user logs out, clear session state and go to landing ───────────────
+  // IMPORTANT: Only fire when loading=false to avoid redirecting during token
+  // verification on page reload (when user is momentarily null before /auth/me responds)
   useEffect(() => {
     if (!loading && !user) {
-      clearSessionState()
-      navigateTo('landing')
+      const savedView = localStorage.getItem(VIEW_KEY) || 'landing'
+      // Only clear/redirect if we were actually in the app — not on initial landing
+      if (savedView === 'app') {
+        clearSessionState()
+        navigateTo('landing')
+      }
     }
   }, [user, loading]) // eslint-disable-line
 

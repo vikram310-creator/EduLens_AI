@@ -37,8 +37,9 @@ applyTheme(initial.theme)
 export function AuthProvider({ children }) {
   // Initialise user from cache → renders logged-in immediately on refresh
   const [user, setUser]         = useState(initial.user)
-  // loading = true only while we're verifying the token in the background
-  const [loading, setLoading]   = useState(!!initial.token && !initial.user)
+  // loading = true whenever we have a token and need to verify it
+  // This prevents the logout effect in App.jsx from firing before verification
+  const [loading, setLoading]   = useState(!!initial.token)
   const [showAuth, setShowAuth] = useState(false)
   const [authIntent, setAuthIntent] = useState(null)
   const verifyRef = useRef(false)   // prevent double-verify in React StrictMode
@@ -55,7 +56,8 @@ export function AuthProvider({ children }) {
     const cachedUser = initial.user
     if (cachedUser) {
       setUser(cachedUser)
-      setLoading(false)
+      // Keep loading=true until /auth/me completes so App.jsx
+      // logout effect doesn't fire prematurely during verification
     }
 
     api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } })
@@ -76,6 +78,7 @@ export function AuthProvider({ children }) {
         }
         // Any other error (network, 500, timeout, CORS) → keep cached user logged in
         // This prevents logout on refresh due to temporary network issues
+        // setUser is NOT called here so cached user remains
       })
       .finally(() => setLoading(false))
   }, [])
