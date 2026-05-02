@@ -6,6 +6,7 @@ import LandingPage from './pages/LandingPage'
 import { useChatStore } from './store/chatStore'
 import { useAuth } from './context/AuthContext'
 import AuthModal from './components/auth/AuthModal'
+import ProfileDropdown from './components/auth/ProfileDropdown'
 
 const PERSONAS = [
   { id: 'assistant', icon: '✦', label: 'Assistant', desc: 'General purpose AI helper',  color: 'from-violet-600/20 to-indigo-600/10', ring: 'ring-violet-500/20' },
@@ -170,6 +171,7 @@ export default function App() {
                     className="text-xs px-3 py-1.5 rounded-lg border border-white/8 text-white/40 hover:text-white/70 hover:border-white/15 transition">
                     ← Back to home
                   </button>
+                  <ProfileDropdown />
                 </div>
               )}
 
