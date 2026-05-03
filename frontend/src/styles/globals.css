@@ -509,6 +509,11 @@ html { scroll-behavior: smooth; }
   border-radius: 6px;
 }
 
+/* Chat textarea handles focus state via parent container — suppress default ring */
+textarea:focus-visible {
+  outline: none;
+}
+
 /* Page transition */
 @keyframes pageIn {
   from { opacity: 0; transform: translateY(6px); }
