@@ -66,12 +66,12 @@ export default function ProfileDropdown({ compact = false, onAbout }) {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 6 }}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 6 }}
-            transition={{ duration: 0.14, ease: [0.22, 1, 0.36, 1] }}
-            className="dropdown-card absolute left-0 bottom-full mb-2 w-64 rounded-2xl z-[200]"
-            style={{ overflow: 'visible' }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute left-0 bottom-full mb-3 w-[260px] rounded-[24px] z-[200] shadow-[0_20px_70px_rgba(0,0,0,0.3)] border border-theme"
+            style={{ overflow: 'hidden', background: 'var(--surface-2)', backdropFilter: 'blur(20px)' }}
           >
             {/* User info */}
             <div className="p-4" style={{ borderBottom: '1px solid var(--border)' }}>
@@ -97,7 +97,7 @@ export default function ProfileDropdown({ compact = false, onAbout }) {
               {/* Appearance */}
               <button
                 onClick={() => setShowThemes(s => !s)}
-                className="dropdown-item"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition hover:bg-white/10"
               >
                 <Palette size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
                 <span className="flex-1">Appearance</span>
@@ -147,7 +147,7 @@ export default function ProfileDropdown({ compact = false, onAbout }) {
               {/* About */}
               <button
                 onClick={() => { onAbout?.(); setOpen(false) }}
-                className="dropdown-item"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition hover:bg-white/10"
               >
                 <Info size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
                 <span className="flex-1">About</span>
@@ -157,7 +157,7 @@ export default function ProfileDropdown({ compact = false, onAbout }) {
 
               <button
                 onClick={() => { logout(); setOpen(false) }}
-                className="dropdown-item dropdown-item-danger"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/10"
               >
                 <LogOut size={14} style={{ flexShrink: 0 }} />
                 Sign out

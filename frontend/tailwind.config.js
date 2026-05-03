@@ -4,9 +4,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Syne"', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
-        body: ['"DM Sans"', 'sans-serif'],
+        display: ['"Outfit"', 'sans-serif'],
+        mono: ['"Fira Code"', 'monospace'],
+        body: ['"Inter"', 'sans-serif'],
       },
       colors: {
         void: '#050508',

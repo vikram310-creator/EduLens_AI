@@ -6,7 +6,7 @@ import ChatInput from '../components/chat/ChatInput'
 import TypingIndicator from '../components/chat/TypingIndicator'
 import ChatHeader from '../components/chat/ChatHeader'
 import StreamingBubble from '../components/chat/StreamingBubble'
-import { Sparkles, ChevronDown } from 'lucide-react'
+import { Sparkles, ChevronDown, Menu } from 'lucide-react'
 
 const PERSONA_SUGGESTIONS = {
   assistant: [
@@ -42,11 +42,11 @@ const PERSONA_SUGGESTIONS = {
 }
 
 const PERSONA_WELCOME = {
-  assistant: { emoji: '✦', title: 'How can I help?',  sub: "Ask me anything — I'm here to help." },
-  coder:     { emoji: '⌥', title: 'Ready to code',    sub: 'Share your code, error, or idea.' },
-  teacher:   { emoji: '◈', title: "Let's learn",      sub: 'What would you like to understand today?' },
-  writer:    { emoji: '✐', title: "Let's write",      sub: "I'll help you craft something great." },
-  analyst:   { emoji: '◎', title: "Let's analyse",    sub: 'Bring your data, question, or strategy.' },
+  assistant: { emoji: '✦', title: 'How can I help?', sub: "Ask me anything — I'm here to help." },
+  coder: { emoji: '⌥', title: 'Ready to code', sub: 'Share your code, error, or idea.' },
+  teacher: { emoji: '◈', title: "Let's learn", sub: 'What would you like to understand today?' },
+  writer: { emoji: '✐', title: "Let's write", sub: "I'll help you craft something great." },
+  analyst: { emoji: '◎', title: "Let's analyse", sub: 'Bring your data, question, or strategy.' },
 }
 
 export default function ChatPage({ onMenuOpen }) {
@@ -55,10 +55,10 @@ export default function ChatPage({ onMenuOpen }) {
   const scrollRef = useRef(null)
   const [showJump, setShowJump] = useState(false)
 
-  const session     = sessions.find((s) => s.id === activeSessionId)
-  const personaId   = session?.system_prompt || 'assistant'
-  const isEmpty     = messages.length === 0 && !isStreaming
-  const welcome     = PERSONA_WELCOME[personaId] || PERSONA_WELCOME.assistant
+  const session = sessions.find((s) => s.id === activeSessionId)
+  const personaId = session?.system_prompt || 'assistant'
+  const isEmpty = messages.length === 0 && !isStreaming
+  const welcome = PERSONA_WELCOME[personaId] || PERSONA_WELCOME.assistant
   const suggestions = PERSONA_SUGGESTIONS[personaId] || PERSONA_SUGGESTIONS.assistant
 
   useEffect(() => {
@@ -73,27 +73,34 @@ export default function ChatPage({ onMenuOpen }) {
 
   return (
     <div className="flex h-full flex-col" style={{ position: 'relative' }}>
-      <ChatHeader session={session} totalTokens={totalTokens} onMenuOpen={onMenuOpen} />
+      {/* Mobile Menu Trigger (since header is gone) */}
+      <button
+        onClick={onMenuOpen}
+        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-black/20 backdrop-blur-md lg:hidden"
+        style={{ color: 'var(--text-2)' }}
+      >
+        <Menu size={20} />
+      </button>
 
       <div ref={scrollRef} onScroll={handleScroll} className="chat-scroll flex-1 overflow-y-auto">
-        <div className="mx-auto flex max-w-2xl flex-col gap-6 px-5 py-8">
+        <div className="mx-auto flex max-w-4xl flex-col gap-6 px-6 py-10">
 
           {isEmpty && (
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, ease: [0.22,1,0.36,1] }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
               className="flex flex-col items-center gap-10 py-8"
             >
               <div className="text-center">
                 <motion.div
-                  animate={{ y: [0,-7,0] }}
+                  animate={{ y: [0, -7, 0] }}
                   transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
                   className="mb-5 inline-flex h-[76px] w-[76px] items-center justify-center rounded-[24px] border border-violet-500/20 bg-gradient-to-br from-violet-600/20 to-indigo-700/15 shadow-2xl shadow-violet-900/20"
                   style={{ fontSize: '2rem' }}
                 >
                   {welcome.emoji}
                 </motion.div>
-                <h2 className="font-display text-[1.7rem] font-800 tracking-tight text-white">{welcome.title}</h2>
+                <h2 className="glow-text font-display text-[2.2rem] font-800 tracking-tight" style={{ color: 'var(--text-1)' }}>{welcome.title}</h2>
                 <p className="mt-1.5 text-sm" style={{ color: 'var(--text-3)' }}>{welcome.sub}</p>
               </div>
 
@@ -102,29 +109,19 @@ export default function ChatPage({ onMenuOpen }) {
                   <motion.button
                     key={s.text}
                     initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.18 + i*0.07, ease: [0.22,1,0.36,1] }}
+                    transition={{ delay: 0.18 + i * 0.07, ease: [0.22, 1, 0.36, 1] }}
                     whileHover={{ scale: 1.025 }} whileTap={{ scale: 0.975 }}
                     onClick={() => sendMessage(s.text)}
-                    className="group flex items-start gap-3 rounded-xl border border-white/6 bg-white/[0.025] p-4 text-left transition-all hover:border-violet-500/25 hover:bg-violet-500/5"
+                    className="group flex items-start gap-3 insane-card p-5 text-left transition-all"
                   >
                     <span className="mt-0.5 text-base leading-none">{s.icon}</span>
-                    <span className="text-[13px] leading-snug transition-colors group-hover:text-white/75" style={{ color: 'var(--text-3)' }}>
+                    <span className="text-[13px] leading-snug transition-colors group-hover:text-[var(--text-1)]" style={{ color: 'var(--text-3)' }}>
                       {s.text}
                     </span>
                   </motion.button>
                 ))}
               </div>
 
-              <motion.div
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}
-                className="flex items-center gap-2 rounded-full border border-white/6 px-4 py-2"
-                style={{ background: 'var(--surface-3)' }}
-              >
-                <Sparkles size={11} className="text-violet-400" />
-                <span className="text-[11px] font-500" style={{ color: 'var(--text-3)' }}>
-                  Powered by Groq · Ultra-fast inference
-                </span>
-              </motion.div>
             </motion.div>
           )}
 

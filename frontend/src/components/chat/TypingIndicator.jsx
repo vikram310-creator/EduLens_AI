@@ -15,12 +15,12 @@ export default function TypingIndicator() {
           transition={{ repeat: Infinity, duration: 2.5, ease: 'linear' }}
           className="absolute inset-0 rounded-xl border border-violet-500/40 border-t-violet-400"
         />
-        <div className="flex h-6 w-6 items-center justify-center rounded-[10px] border border-white/8 bg-[#13131e]">
+        <div className="flex h-6 w-6 items-center justify-center rounded-[10px] border border-theme" style={{ background: 'var(--surface-3)' }}>
           <Zap size={12} className="text-violet-400" />
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 rounded-xl border border-white/6 bg-[#13131e]/60 px-4 py-3">
+      <div className="flex items-center gap-1.5 rounded-xl border border-theme px-4 py-3" style={{ background: 'var(--surface-2)' }}>
         <span className="typing-dot" />
         <span className="typing-dot" />
         <span className="typing-dot" />

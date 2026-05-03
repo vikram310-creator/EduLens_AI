@@ -10,30 +10,30 @@ import { useAuth } from '../../context/AuthContext'
 import { useChatStore } from '../../store/chatStore'
 
 const LANG_META = {
-  python:     { color: '#3b82f6', bg: 'rgba(59,130,246,0.12)',  label: 'Python'     },
+  python: { color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', label: 'Python' },
   javascript: { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', label: 'JavaScript' },
   typescript: { color: '#38bdf8', bg: 'rgba(56,189,248,0.12)', label: 'TypeScript' },
-  jsx:        { color: '#61dafb', bg: 'rgba(97,218,251,0.12)',  label: 'JSX'        },
-  tsx:        { color: '#38bdf8', bg: 'rgba(56,189,248,0.12)', label: 'TSX'        },
-  css:        { color: '#a78bfa', bg: 'rgba(167,139,250,0.12)',label: 'CSS'        },
-  html:       { color: '#fb923c', bg: 'rgba(251,146,60,0.12)', label: 'HTML'       },
-  bash:       { color: '#4ade80', bg: 'rgba(74,222,128,0.12)', label: 'Bash'       },
-  sh:         { color: '#4ade80', bg: 'rgba(74,222,128,0.12)', label: 'Shell'      },
-  json:       { color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', label: 'JSON'       },
-  sql:        { color: '#67e8f9', bg: 'rgba(103,232,249,0.12)',label: 'SQL'        },
-  rust:       { color: '#fb923c', bg: 'rgba(251,146,60,0.12)', label: 'Rust'       },
-  go:         { color: '#34d399', bg: 'rgba(52,211,153,0.12)', label: 'Go'         },
-  java:       { color: '#f87171', bg: 'rgba(248,113,113,0.12)',label: 'Java'       },
-  cpp:        { color: '#c084fc', bg: 'rgba(192,132,252,0.12)',label: 'C++'        },
-  c:          { color: '#c084fc', bg: 'rgba(192,132,252,0.12)',label: 'C'          },
-  text:       { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)',label: 'Text'       },
+  jsx: { color: '#61dafb', bg: 'rgba(97,218,251,0.12)', label: 'JSX' },
+  tsx: { color: '#38bdf8', bg: 'rgba(56,189,248,0.12)', label: 'TSX' },
+  css: { color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', label: 'CSS' },
+  html: { color: '#fb923c', bg: 'rgba(251,146,60,0.12)', label: 'HTML' },
+  bash: { color: '#4ade80', bg: 'rgba(74,222,128,0.12)', label: 'Bash' },
+  sh: { color: '#4ade80', bg: 'rgba(74,222,128,0.12)', label: 'Shell' },
+  json: { color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', label: 'JSON' },
+  sql: { color: '#67e8f9', bg: 'rgba(103,232,249,0.12)', label: 'SQL' },
+  rust: { color: '#fb923c', bg: 'rgba(251,146,60,0.12)', label: 'Rust' },
+  go: { color: '#34d399', bg: 'rgba(52,211,153,0.12)', label: 'Go' },
+  java: { color: '#f87171', bg: 'rgba(248,113,113,0.12)', label: 'Java' },
+  cpp: { color: '#c084fc', bg: 'rgba(192,132,252,0.12)', label: 'C++' },
+  c: { color: '#c084fc', bg: 'rgba(192,132,252,0.12)', label: 'C' },
+  text: { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', label: 'Text' },
 }
 
 function CodeBlock({ children, className }) {
   const [copied, setCopied] = useState(false)
   const rawLang = (className?.replace('language-', '') || 'text').toLowerCase()
-  const meta    = LANG_META[rawLang] || { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', label: rawLang.toUpperCase() }
-  const code    = String(children).trimEnd()
+  const meta = LANG_META[rawLang] || { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', label: rawLang.toUpperCase() }
+  const code = String(children).trimEnd()
   const lineCount = code.split('\n').length
 
   const copy = () => {
@@ -44,67 +44,98 @@ function CodeBlock({ children, className }) {
 
   return (
     <div
-      className="group/code my-4 overflow-hidden rounded-2xl shadow-2xl shadow-black/60"
-      style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'var(--surface-2)' }}
+      className="group/code relative my-8 overflow-hidden rounded-[24px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] transition-all duration-500 hover:shadow-[0_40px_80px_-16px_rgba(0,0,0,0.7)]"
+      style={{
+        border: '1px solid var(--border)',
+        background: 'linear-gradient(165deg, rgba(13,13,20,0.8) 0%, rgba(8,8,12,0.95) 100%)',
+        backdropFilter: 'blur(24px)'
+      }}
     >
+      {/* Persona-themed top glow line */}
+      <div className="absolute top-0 left-0 right-0 h-[1px]" style={{ background: `linear-gradient(90deg, transparent 0%, ${meta.color}88 50%, transparent 100%)` }} />
+
       <div
-        className="flex items-center justify-between px-4 py-2.5"
-        style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        className="flex items-center justify-between px-6 py-4"
+        style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
       >
-        <div className="flex items-center gap-3">
-          <div className="flex gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-full" style={{ background: '#ff5f57' }} />
-            <div className="h-2.5 w-2.5 rounded-full" style={{ background: '#febc2e' }} />
-            <div className="h-2.5 w-2.5 rounded-full" style={{ background: '#28c840' }} />
+        <div className="flex items-center gap-5">
+          <div className="flex gap-2">
+            <div className="h-2.5 w-2.5 rounded-full bg-white/10" />
+            <div className="h-2.5 w-2.5 rounded-full bg-white/10" />
+            <div className="h-2.5 w-2.5 rounded-full bg-white/10" />
           </div>
-          <span
-            className="rounded-md px-2 py-0.5 font-mono text-[10px] font-600 tracking-wider uppercase"
-            style={{ color: meta.color, background: meta.bg, border: `1px solid ${meta.color}22` }}
-          >
-            {meta.label}
-          </span>
-          <span className="text-[10px] text-white/18 font-mono">
-            {lineCount} {lineCount === 1 ? 'line' : 'lines'}
-          </span>
+          <div className="flex items-center gap-3">
+            <span
+              className="text-[10px] font-900 tracking-[0.2em] uppercase"
+              style={{ color: meta.color, textShadow: `0 0 12px ${meta.color}66` }}
+            >
+              {meta.label}
+            </span>
+            <div className="h-1 w-1 rounded-full bg-white/10" />
+            <span className="text-[10px] font-mono font-500 opacity-30" style={{ color: 'var(--text-3)' }}>
+              {lineCount} L
+            </span>
+          </div>
         </div>
+
         <motion.button
-          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.05, y: -1 }} whileTap={{ scale: 0.95 }}
           onClick={copy}
-          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-500 transition-all duration-150"
+          className="flex items-center gap-2 rounded-full px-4 py-1.5 text-[11px] font-bold tracking-tight transition-all duration-300"
           style={copied
-            ? { color: '#4ade80', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)' }
-            : { color: 'rgba(255,255,255,0.28)', background: 'transparent', border: '1px solid transparent' }
+            ? { color: '#10b981', background: 'rgba(16,185,129,0.1)', boxShadow: '0 0 20px rgba(16,185,129,0.15)' }
+            : { color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }
           }
         >
-          {copied ? <><Check size={10} /> Copied!</> : <><Copy size={10} /> Copy</>}
+          {copied ? <Check size={12} strokeWidth={3} /> : <Copy size={12} strokeWidth={2.5} />}
+          <span>{copied ? 'Copied' : 'Copy'}</span>
         </motion.button>
       </div>
-      <SyntaxHighlighter
-        language={rawLang}
-        style={vscDarkPlus}
-        customStyle={{
-          margin: 0, background: 'var(--surface-2)',
-          fontSize: '0.78rem',
-          fontFamily: "'JetBrains Mono','Fira Code',monospace",
-          padding: '1.15rem 1.25rem', lineHeight: '1.7', borderRadius: 0,
-        }}
-        showLineNumbers={lineCount > 4}
-        lineNumberStyle={{ color: 'rgba(255,255,255,0.1)', fontSize: '0.68rem', paddingRight: '1.25rem', minWidth: '2.5rem', userSelect: 'none' }}
-        wrapLongLines={false}
-        PreTag="div"
-      >
-        {code}
-      </SyntaxHighlighter>
+
+      <div className="relative custom-scrollbar overflow-x-auto">
+        <SyntaxHighlighter
+          language={rawLang}
+          style={vscDarkPlus}
+          customStyle={{
+            margin: 0,
+            background: 'transparent',
+            fontSize: '0.82rem',
+            fontFamily: "'JetBrains Mono','Fira Code',monospace",
+            padding: '1.75rem 1.5rem',
+            lineHeight: '1.7',
+            borderRadius: 0,
+          }}
+          showLineNumbers={lineCount > 1}
+          lineNumberStyle={{
+            color: 'var(--text-3)',
+            opacity: 0.15,
+            fontSize: '0.7rem',
+            paddingRight: '2rem',
+            minWidth: '3rem',
+            textAlign: 'right',
+            userSelect: 'none',
+            fontStyle: 'italic'
+          }}
+          wrapLongLines={false}
+          PreTag="div"
+        >
+          {code}
+        </SyntaxHighlighter>
+
+        {/* Neon corner glow */}
+        <div className="absolute top-0 right-0 h-32 w-32 rounded-full filter blur-[60px] pointer-events-none opacity-[0.03]"
+          style={{ background: meta.color }} />
+      </div>
     </div>
   )
 }
 
 export default function MessageBubble({ message, index }) {
   const isUser = message.role === 'user'
-  const [copied, setCopied]       = useState(false)
-  const [lightbox, setLightbox]   = useState(null)
-  const [reaction, setReaction]   = useState(null) // 'up' | 'down'
-  const { user }                  = useAuth()
+  const [copied, setCopied] = useState(false)
+  const [lightbox, setLightbox] = useState(null)
+  const [reaction, setReaction] = useState(null) // 'up' | 'down'
+  const { user } = useAuth()
   const { sendMessage, messages } = useChatStore()
 
   const userInitial = user?.name
@@ -133,16 +164,16 @@ export default function MessageBubble({ message, index }) {
     <motion.div
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.28, ease: [0.22,1,0.36,1] }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       className={`group flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
     >
       {/* Avatar */}
       <div
-        className={`relative mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
-          isUser
+        className={`relative mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${isUser
             ? 'bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-lg shadow-violet-900/40'
-            : 'border border-white/8 bg-[#13131e] text-violet-400'
-        }`}
+            : 'border border-theme text-violet-400'
+          }`}
+        style={{ background: isUser ? '' : 'var(--surface-3)' }}
       >
         {isUser ? userInitial : <Zap size={13} />}
         {!isUser && (
@@ -154,8 +185,7 @@ export default function MessageBubble({ message, index }) {
       <div className={`flex min-w-0 max-w-[80%] flex-col gap-2 ${isUser ? 'items-end' : 'items-start'}`}>
         {isUser ? (
           <div
-            className="rounded-2xl rounded-tr-sm text-sm leading-relaxed text-white/90 shadow-lg shadow-violet-900/10 overflow-hidden"
-            style={{ border: '1px solid rgba(139,92,246,0.2)' }}
+            className="bubble-user rounded-2xl rounded-tr-sm text-sm leading-relaxed overflow-hidden"
           >
             {/* Images */}
             {message.images && message.images.length > 0 && (
@@ -168,10 +198,10 @@ export default function MessageBubble({ message, index }) {
                     key={i}
                     className="group relative overflow-hidden cursor-zoom-in"
                     style={{ borderRadius: '10px', aspectRatio: '4/3' }}
-                    onClick={() => setLightbox({ src: img.dataUrl || img.data_url || img, name: img.name || `Image ${i+1}` })}
+                    onClick={() => setLightbox({ src: img.dataUrl || img.data_url || img, name: img.name || `Image ${i + 1}` })}
                   >
                     <img
-                      src={img.dataUrl || img.data_url || img} alt={img.name || `image ${i+1}`}
+                      src={img.dataUrl || img.data_url || img} alt={img.name || `image ${i + 1}`}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                       className="transition-transform duration-200 group-hover:scale-105"
                     />
@@ -215,14 +245,14 @@ export default function MessageBubble({ message, index }) {
                     </button>
                     <img
                       src={lightbox.src} alt={lightbox.name}
-                      style={{ maxWidth: '88vw', maxHeight: '82vh', objectFit: 'contain', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 32px 80px rgba(0,0,0,0.7)', display: 'block' }}
+                      style={{ maxWidth: '88vw', maxHeight: '82vh', objectFit: 'contain', borderRadius: '14px', border: '1px solid var(--border)', boxShadow: '0 32px 80px rgba(0,0,0,0.7)', display: 'block' }}
                     />
                     <div
                       className="mt-3 flex items-center gap-2 rounded-lg px-3 py-1.5"
-                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
+                      style={{ background: 'var(--surface-3)', border: '1px solid var(--border)' }}
                     >
-                      <span className="text-white/50" style={{ fontSize: '11px' }}>{lightbox.name}</span>
-                      <span className="text-white/20" style={{ fontSize: '10px' }}>· click outside to close</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-2)' }}>{lightbox.name}</span>
+                      <span style={{ fontSize: '10px', color: 'var(--text-3)' }}>· click outside to close</span>
                     </div>
                   </motion.div>
                 </motion.div>
@@ -230,10 +260,7 @@ export default function MessageBubble({ message, index }) {
             </AnimatePresence>
 
             {content && (
-              <div
-                className="px-4 py-3 whitespace-pre-wrap"
-                style={{ background: 'linear-gradient(135deg,rgba(99,60,180,0.22),rgba(67,44,140,0.18))' }}
-              >
+              <div className="px-4 py-3 whitespace-pre-wrap">
                 {content}
               </div>
             )}
@@ -246,8 +273,29 @@ export default function MessageBubble({ message, index }) {
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                      code({ node, inline, className, children, ...props }) {
-                        if (inline) return <code className={className} {...props}>{children}</code>
+                      code({ node, className, children, ...props }) {
+                        const isInline = !node?.properties?.className && 
+                          node?.position?.start?.line === node?.position?.end?.line &&
+                          !/\n/.test(String(children))
+                        if (isInline) {
+                          return (
+                            <code
+                              style={{
+                                background: 'rgba(139, 92, 246, 0.15)',
+                                color: '#c4b5fd',
+                                padding: '0.15em 0.45em',
+                                borderRadius: '6px',
+                                fontSize: '0.88em',
+                                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                                border: '1px solid rgba(139, 92, 246, 0.2)',
+                                fontWeight: 500,
+                              }}
+                              {...props}
+                            >
+                              {children}
+                            </code>
+                          )
+                        }
                         return <CodeBlock className={className}>{children}</CodeBlock>
                       },
                     }}
@@ -256,7 +304,7 @@ export default function MessageBubble({ message, index }) {
                   </ReactMarkdown>
                 </ErrorBoundary>
               ) : (
-                <span className="text-white/30 italic">Empty response</span>
+                <span className="italic" style={{ color: 'var(--text-3)' }}>Empty response</span>
               )}
             </div>
 
@@ -272,7 +320,8 @@ export default function MessageBubble({ message, index }) {
               <motion.button
                 whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 onClick={copyMsg}
-                className="flex items-center gap-1.5 rounded-lg border border-white/8 bg-[#13131e] px-2.5 py-1 text-[11px] font-500 text-white/35 opacity-0 shadow-sm transition-all duration-150 group-hover:opacity-100 hover:border-white/14 hover:bg-[#1a1a26] hover:text-white/80"
+                className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-500 opacity-0 shadow-sm transition-all duration-150 group-hover:opacity-100 hover:bg-violet-500/10"
+                style={{ border: '1px solid var(--border)', background: 'var(--surface-3)', color: 'var(--text-3)' }}
               >
                 {copied
                   ? <span className="flex items-center gap-1 text-emerald-400"><Check size={10} /> Copied</span>
@@ -284,7 +333,8 @@ export default function MessageBubble({ message, index }) {
               <motion.button
                 whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 onClick={handleRegenerate}
-                className="flex items-center gap-1.5 rounded-lg border border-white/8 bg-[#13131e] px-2.5 py-1 text-[11px] font-500 text-white/35 opacity-0 shadow-sm transition-all duration-150 group-hover:opacity-100 hover:border-white/14 hover:bg-[#1a1a26] hover:text-white/80"
+                className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-500 opacity-0 shadow-sm transition-all duration-150 group-hover:opacity-100 hover:bg-violet-500/10"
+                style={{ border: '1px solid var(--border)', background: 'var(--surface-3)', color: 'var(--text-3)' }}
                 title="Regenerate response"
               >
                 <RefreshCw size={10} /> Retry
@@ -297,7 +347,7 @@ export default function MessageBubble({ message, index }) {
                   onClick={() => setReaction(r => r === 'up' ? null : 'up')}
                   className="flex h-6 w-6 items-center justify-center rounded-md transition"
                   style={{
-                    color: reaction === 'up' ? '#4ade80' : 'rgba(255,255,255,0.25)',
+                    color: reaction === 'up' ? '#4ade80' : 'var(--text-3)',
                     background: reaction === 'up' ? 'rgba(74,222,128,0.1)' : 'transparent',
                   }}
                   title="Good response"
@@ -309,7 +359,7 @@ export default function MessageBubble({ message, index }) {
                   onClick={() => setReaction(r => r === 'down' ? null : 'down')}
                   className="flex h-6 w-6 items-center justify-center rounded-md transition"
                   style={{
-                    color: reaction === 'down' ? '#f87171' : 'rgba(255,255,255,0.25)',
+                    color: reaction === 'down' ? '#f87171' : 'var(--text-3)',
                     background: reaction === 'down' ? 'rgba(248,113,113,0.1)' : 'transparent',
                   }}
                   title="Bad response"

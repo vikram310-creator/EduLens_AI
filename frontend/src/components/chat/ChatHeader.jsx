@@ -87,41 +87,7 @@ export default function ChatHeader({ session, totalTokens, onMenuOpen }) {
           )}
         </AnimatePresence>
 
-        {/* Export button */}
-        <button
-          onClick={exportChat}
-          title="Export chat as JSON"
-          className="hidden sm:flex h-7 w-7 items-center justify-center rounded-lg transition hover:bg-white/6"
-          style={{ color: 'var(--text-3)' }}
-        >
-          <Download size={13} />
-        </button>
 
-        {/* Model chip */}
-        <div
-          className="hidden sm:flex items-center gap-1.5 rounded-full border px-2.5 py-1"
-          style={{ borderColor: 'var(--border-strong)', background: 'var(--surface-3)' }}
-        >
-          <Zap size={9} className="text-violet-400" />
-          <span className="text-[11px] font-500" style={{ color: 'var(--text-2)' }}>
-            {MODEL_LABEL[model] || model}
-          </span>
-        </div>
-
-        {/* Token count */}
-        <AnimatePresence>
-          {totalTokens > 0 && !isStreaming && (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="hidden md:flex items-center rounded-full border px-2.5 py-1"
-              style={{ borderColor: 'var(--border)', background: 'var(--surface-3)' }}
-            >
-              <span className="text-[11px]" style={{ color: 'var(--text-3)' }}>
-                {totalTokens.toLocaleString()} tokens
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   )

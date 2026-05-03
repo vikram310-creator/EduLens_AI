@@ -113,8 +113,8 @@ export default function App() {
     <div className="app-bg noise flex h-screen w-screen overflow-hidden">
       {/* Ambient blobs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-56 -left-40 h-[500px] w-[500px] rounded-full bg-violet-900/8 blur-[130px]" />
-        <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-indigo-900/6 blur-[100px]" />
+        <div className="orb-1" style={{ width: '800px', height: '800px', top: '-20%', left: '-10%' }} />
+        <div className="orb-1" style={{ width: '600px', height: '600px', bottom: '10%', right: '-10%', animationDelay: '-5s' }} />
       </div>
 
       {/* Desktop sidebar */}
@@ -185,12 +185,13 @@ export default function App() {
                   </motion.button>
                   <h1
                     onClick={() => clearActiveSession()}
-                    className="font-display text-4xl font-800 tracking-tight text-white cursor-pointer hover:text-violet-300 transition-colors duration-200"
+                    className="glow-text font-display text-5xl font-900 tracking-tight cursor-pointer hover:text-violet-300 transition-colors duration-200"
+                    style={{ color: 'var(--text-1)' }}
                     title="Back to mode picker"
                   >
                     EduLens_AI
                   </h1>
-                  <p className="mt-2 text-[15px] text-white/30">
+                  <p className="mt-2 text-[15px]" style={{ color: 'var(--text-3)' }}>
                     {user ? 'Choose a mode to begin your session.' : 'Sign in to start chatting with AI.'}
                   </p>
                 </div>
@@ -202,11 +203,11 @@ export default function App() {
                       transition={{ delay: 0.1 + i * 0.07, ease: [0.22, 1, 0.36, 1] }}
                       whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
                       onClick={() => handlePersonaClick(p.id)}
-                      className={`group flex flex-col items-start gap-2.5 rounded-2xl border border-white/6 bg-gradient-to-br ${p.color} ring-1 ${p.ring} p-4 text-left transition-all hover:border-white/12 hover:ring-2`}>
+                      className={`group flex flex-col items-start gap-2.5 insane-card p-5 text-left transition-all hover:scale-105`}>
                       <span className="text-[22px] leading-none">{p.icon}</span>
                       <div>
-                        <div className="font-display text-[13px] font-700 text-white">{p.label}</div>
-                        <div className="mt-0.5 text-[11px] leading-snug text-white/35">{p.desc}</div>
+                        <div className="font-display text-[13px] font-700" style={{ color: 'var(--text-1)' }}>{p.label}</div>
+                        <div className="mt-0.5 text-[11px] leading-snug" style={{ color: 'var(--text-3)' }}>{p.desc}</div>
                       </div>
                     </motion.button>
                   ))}
@@ -216,11 +217,10 @@ export default function App() {
                 {!user && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
                     className="flex flex-col items-center gap-3">
-                    <button onClick={() => setShowAuth(true)}
-                      className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-2.5 text-sm font-600 text-white shadow-lg shadow-violet-900/30 hover:from-violet-500 hover:to-indigo-500 transition active:scale-[0.98]">
+                    <button onClick={() => setShowAuth(true)} className="btn-insane flex items-center justify-center gap-2 px-8 py-3.5 text-base font-600 text-white w-full">
                       Sign in to start chatting
                     </button>
-                    <p className="text-xs text-white/25">Your chats are saved across sessions</p>
+                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>Your chats are saved across sessions</p>
                   </motion.div>
                 )}
               </div>

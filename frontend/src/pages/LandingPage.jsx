@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
+import CosmicBackground from '../components/landing/CosmicBackground'
 import {
   Zap, MessageSquare, Shield, Cpu, BookOpen, PenTool, BarChart2,
   ChevronRight, Star, Check, Mail, Twitter, Github, Menu, X,
@@ -144,13 +145,16 @@ export default function LandingPage({ onEnterApp }) {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden"
-      style={{ background: '#080810', fontFamily: "'DM Sans', sans-serif", color: '#f1f0f8' }}>
+    <div className="relative min-h-screen overflow-x-hidden noise"
+      style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-1)' }}>
 
-      {/* Global orbs */}
-      <GradientOrb style={{ width: 600, height: 600, top: -200, left: '50%', transform: 'translateX(-50%)', background: 'rgba(139,92,246,0.07)' }} />
-      <GradientOrb style={{ width: 400, height: 400, top: '40vh', right: -100, background: 'rgba(6,182,212,0.05)' }} />
-      <GradientOrb style={{ width: 500, height: 500, bottom: '20vh', left: -150, background: 'rgba(139,92,246,0.05)' }} />
+      {/* Insane-Level Interactive Canvas Background */}
+      <div className="fixed inset-0 z-0 overflow-hidden bg-[#020205]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#080812] via-[#020205] to-[#0a0a1f]" />
+        <CosmicBackground />
+      </div>
+
+      <div className="relative z-10">
 
       {/* ── Navbar ─────────────────────────────────────────────────────────── */}
       <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
@@ -167,7 +171,7 @@ export default function LandingPage({ onEnterApp }) {
               style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', boxShadow: '0 4px 16px rgba(139,92,246,0.35)' }}>
               ⚡
             </div>
-            <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1.05rem', letterSpacing: '-0.01em' }}>
+            <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.01em' }}>
               EduLens<span style={{ color: '#8b5cf6' }}>_AI</span>
             </span>
           </button>
@@ -186,9 +190,7 @@ export default function LandingPage({ onEnterApp }) {
           {/* CTA */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <button onClick={onEnterApp}
-                className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
-                style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
+              <button onClick={onEnterApp} className="btn-insane px-5 py-2.5 text-sm flex items-center gap-2">
                 Open App <ArrowRight size={14} />
               </button>
             ) : (
@@ -198,9 +200,7 @@ export default function LandingPage({ onEnterApp }) {
                   style={{ color: 'rgba(255,255,255,0.5)' }}>
                   Sign in
                 </button>
-                <button onClick={() => setShowAuth(true)}
-                  className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
-                  style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', boxShadow: '0 4px 16px rgba(139,92,246,0.3)' }}>
+                <button onClick={() => setShowAuth(true)} className="btn-insane px-5 py-2.5 text-sm flex items-center gap-2">
                   Get started free
                 </button>
               </>
@@ -226,9 +226,7 @@ export default function LandingPage({ onEnterApp }) {
                   {l.label}
                 </button>
               ))}
-              <button onClick={handleCTA}
-                className="mt-2 rounded-xl py-2.5 text-sm font-semibold text-white"
-                style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
+              <button onClick={handleCTA} className="btn-insane mt-2 py-3">
                 {user ? 'Open App' : 'Get started free'}
               </button>
             </motion.div>
@@ -250,32 +248,26 @@ export default function LandingPage({ onEnterApp }) {
           </motion.div>
 
           {/* Headline */}
-          <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 'clamp(2.5rem, 7vw, 5rem)', lineHeight: 1.05, letterSpacing: '-0.03em' }}>
+          <h1 className="glow-text animate-float" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 900, fontSize: 'clamp(3rem, 9vw, 6rem)', lineHeight: 1.05, letterSpacing: '-0.03em' }}>
             AI that thinks{' '}
-            <span style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            <span style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)', backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               at your speed
             </span>
           </h1>
 
-          <p className="mt-6 text-lg leading-relaxed max-w-2xl mx-auto" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          <p className="mt-6 text-lg leading-relaxed max-w-2xl mx-auto" style={{ color: 'var(--text-2)' }}>
             EduLens AI gives you a personal AI tutor, coder, writer, and analyst —
             all in one place. Every conversation saved. Every insight remembered.
           </p>
 
           {/* CTA buttons */}
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-              onClick={handleCTA}
-              className="flex items-center gap-2 rounded-2xl px-7 py-3.5 text-base font-semibold text-white"
-              style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', boxShadow: '0 8px 32px rgba(139,92,246,0.35)' }}>
+            <button onClick={handleCTA} className="btn-insane px-8 py-4 text-lg w-full sm:w-auto flex items-center justify-center gap-2">
               {user ? 'Open App' : 'Start for free'} <ArrowRight size={16} />
-            </motion.button>
-            <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-              onClick={() => scrollTo('#features')}
-              className="flex items-center gap-2 rounded-2xl border px-7 py-3.5 text-base font-medium transition-colors hover:border-white/20"
-              style={{ borderColor: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.55)' }}>
+            </button>
+            <button onClick={() => scrollTo('#features')} className="btn-glass px-8 py-4 text-lg w-full sm:w-auto">
               See features
-            </motion.button>
+            </button>
           </div>
 
           {/* Social proof */}
@@ -288,7 +280,7 @@ export default function LandingPage({ onEnterApp }) {
                 </div>
               ))}
             </div>
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            <p className="text-sm" style={{ color: 'var(--text-3)' }}>
               <span style={{ color: '#c4b5fd', fontWeight: 600 }}>2,400+</span> learners & builders trust EduLens
             </p>
           </div>
@@ -299,8 +291,9 @@ export default function LandingPage({ onEnterApp }) {
           className="relative mt-20 w-full max-w-3xl">
           <div className="absolute inset-0 rounded-3xl blur-[60px] opacity-30"
             style={{ background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)' }} />
-          <div className="relative rounded-3xl border overflow-hidden"
-            style={{ background: 'rgba(15,15,26,0.9)', borderColor: 'rgba(255,255,255,0.08)', boxShadow: '0 40px 80px rgba(0,0,0,0.5)' }}>
+          <div className="relative rounded-[2rem] border overflow-hidden insane-card animate-float-delayed p-1">
+            <div className="absolute inset-0 bg-gradient-to-tr from-violet-600/20 to-sky-500/20 blur-xl"></div>
+            <div className="relative bg-[#0a0a10] rounded-[1.8rem] overflow-hidden">
             {/* Fake title bar */}
             <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
               <div className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
@@ -344,6 +337,7 @@ export default function LandingPage({ onEnterApp }) {
                 </div>
               </motion.div>
             </div>
+            </div>
           </div>
         </motion.div>
 
@@ -362,7 +356,7 @@ export default function LandingPage({ onEnterApp }) {
         <div className="mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#8b5cf6' }}>Features</p>
-            <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em' }}>
+            <h2 className="glow-text" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', letterSpacing: '-0.02em' }}>
               Everything you need to think smarter
             </h2>
             <p className="mt-4 max-w-xl mx-auto" style={{ color: 'rgba(255,255,255,0.4)' }}>
@@ -375,15 +369,14 @@ export default function LandingPage({ onEnterApp }) {
                 initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.07, duration: 0.5 }} viewport={{ once: true }}
                 whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                className="group relative rounded-2xl p-6 border transition-colors"
-                style={{ background: 'rgba(255,255,255,0.025)', borderColor: 'rgba(255,255,255,0.07)' }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = f.color + '44'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'}>
+                className="group relative rounded-3xl p-7 insane-card"
+                onMouseEnter={e => e.currentTarget.style.borderColor = f.color + '66'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-strong)'}>
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl mb-4"
                   style={{ background: f.bg }}>
                   <f.icon size={18} style={{ color: f.color }} />
                 </div>
-                <h3 className="font-semibold mb-2 text-white" style={{ fontFamily: "'Syne', sans-serif" }}>{f.title}</h3>
+                <h3 className="font-semibold mb-3 text-lg text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>{f.title}</h3>
                 <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>{f.desc}</p>
               </motion.div>
             ))}
@@ -396,7 +389,7 @@ export default function LandingPage({ onEnterApp }) {
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-16">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#06b6d4' }}>How it works</p>
-            <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em' }}>
+            <h2 className="glow-text" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', letterSpacing: '-0.02em' }}>
               Up and running in 30 seconds
             </h2>
           </div>
@@ -411,7 +404,7 @@ export default function LandingPage({ onEnterApp }) {
                   {s.n}
                 </div>
                 <div className="pt-2">
-                  <h3 className="font-semibold text-white mb-1" style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.05rem' }}>{s.title}</h3>
+                  <h3 className="font-bold text-white mb-2" style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.2rem' }}>{s.title}</h3>
                   <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.desc}</p>
                 </div>
               </motion.div>
@@ -419,9 +412,7 @@ export default function LandingPage({ onEnterApp }) {
           </div>
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: 0.4 }} viewport={{ once: true }}
             className="mt-12 text-center">
-            <button onClick={handleCTA}
-              className="inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)', boxShadow: '0 8px 32px rgba(139,92,246,0.25)' }}>
+            <button onClick={handleCTA} className="btn-insane px-8 py-3.5 text-base flex items-center justify-center gap-2 mx-auto">
               Try it free <ArrowRight size={14} />
             </button>
           </motion.div>
@@ -442,8 +433,7 @@ export default function LandingPage({ onEnterApp }) {
               <motion.div key={t.name}
                 initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }} viewport={{ once: true }}
-                className="rounded-2xl border p-6"
-                style={{ background: 'rgba(255,255,255,0.025)', borderColor: 'rgba(255,255,255,0.07)' }}>
+                className="rounded-3xl insane-card p-7">
                 <StarRating stars={t.stars} />
                 <p className="mt-4 text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>"{t.text}"</p>
                 <div className="mt-5 flex items-center gap-3">
@@ -467,7 +457,7 @@ export default function LandingPage({ onEnterApp }) {
         <div className="mx-auto max-w-5xl">
           <div className="text-center mb-16">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#10b981' }}>Pricing</p>
-            <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em' }}>
+            <h2 className="glow-text" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', letterSpacing: '-0.02em' }}>
               Simple, transparent pricing
             </h2>
             <p className="mt-4" style={{ color: 'rgba(255,255,255,0.4)' }}>Start free. Upgrade when you need more.</p>
@@ -477,11 +467,9 @@ export default function LandingPage({ onEnterApp }) {
               <motion.div key={plan.name}
                 initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }} viewport={{ once: true }}
-                className="relative rounded-2xl border p-6"
+                className={`relative rounded-3xl p-8 ${plan.highlight ? 'insane-card scale-105 z-10' : 'btn-glass'}`}
                 style={{
-                  background: plan.highlight ? 'rgba(139,92,246,0.08)' : 'rgba(255,255,255,0.025)',
-                  borderColor: plan.highlight ? 'rgba(139,92,246,0.35)' : 'rgba(255,255,255,0.07)',
-                  boxShadow: plan.highlight ? '0 0 40px rgba(139,92,246,0.12)' : 'none',
+                  boxShadow: plan.highlight ? '0 0 40px rgba(139,92,246,0.2)' : 'none',
                 }}>
                 {plan.highlight && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold text-white"
@@ -491,7 +479,7 @@ export default function LandingPage({ onEnterApp }) {
                 )}
                 <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: plan.accent }}>{plan.name}</p>
                 <div className="flex items-end gap-1 mb-1">
-                  <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '2.2rem', color: '#fff', lineHeight: 1 }}>{plan.price}</span>
+                  <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: '3rem', color: '#fff', lineHeight: 1 }}>{plan.price}</span>
                   <span className="mb-1.5 text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>{plan.period}</span>
                 </div>
                 <ul className="mt-6 mb-7 flex flex-col gap-2.5">
@@ -502,12 +490,7 @@ export default function LandingPage({ onEnterApp }) {
                   ))}
                 </ul>
                 <button onClick={handleCTA}
-                  className="w-full rounded-xl py-2.5 text-sm font-semibold transition hover:opacity-90"
-                  style={{
-                    background: plan.highlight ? `linear-gradient(135deg, ${plan.accent}, #7c3aed)` : 'rgba(255,255,255,0.06)',
-                    color: plan.highlight ? '#fff' : 'rgba(255,255,255,0.7)',
-                    border: plan.highlight ? 'none' : '1px solid rgba(255,255,255,0.09)',
-                  }}>
+                  className={plan.highlight ? 'btn-insane w-full py-3.5' : 'btn-glass w-full py-3.5'}>
                   {plan.cta}
                 </button>
               </motion.div>
@@ -522,7 +505,7 @@ export default function LandingPage({ onEnterApp }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
             <motion.div initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
               <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#f43f5e' }}>About</p>
-              <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 'clamp(1.8rem, 3vw, 2.5rem)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+              <h2 className="glow-text" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
                 Built for curious minds
               </h2>
               <p className="mt-5 text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>
@@ -534,7 +517,7 @@ export default function LandingPage({ onEnterApp }) {
               <div className="mt-8 grid grid-cols-3 gap-4">
                 {[['2,400+','Users'],['5','AI Personas'],['99.9%','Uptime']].map(([num, label]) => (
                   <div key={label}>
-                    <p style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1.6rem', color: '#c4b5fd' }}>{num}</p>
+                    <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: '2.5rem', color: 'var(--text-1)' }}>{num}</p>
                     <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
                   </div>
                 ))}
@@ -547,8 +530,7 @@ export default function LandingPage({ onEnterApp }) {
                 { icon: Lock,       color: '#06b6d4', label: 'Privacy first',        desc: 'Your conversations are encrypted and never shared.' },
                 { icon: Headphones, color: '#f59e0b', label: 'Human support',        desc: 'Real humans respond to support tickets within 24h.' },
               ].map(item => (
-                <div key={item.label} className="flex items-start gap-4 rounded-xl p-4 border"
-                  style={{ background: 'rgba(255,255,255,0.025)', borderColor: 'rgba(255,255,255,0.06)' }}>
+                <div key={item.label} className="flex items-start gap-5 rounded-2xl p-5 insane-card">
                   <div className="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl"
                     style={{ background: item.color + '18' }}>
                     <item.icon size={16} style={{ color: item.color }} />
@@ -569,7 +551,7 @@ export default function LandingPage({ onEnterApp }) {
         <div className="mx-auto max-w-2xl">
           <div className="text-center mb-12">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#8b5cf6' }}>FAQ</p>
-            <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 'clamp(1.8rem, 3vw, 2.4rem)', letterSpacing: '-0.02em' }}>
+            <h2 className="glow-text" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', letterSpacing: '-0.02em' }}>
               Common questions
             </h2>
           </div>
@@ -585,7 +567,7 @@ export default function LandingPage({ onEnterApp }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
             <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
               <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#06b6d4' }}>Contact</p>
-              <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 'clamp(1.8rem, 3vw, 2.4rem)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+              <h2 className="glow-text" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
                 We'd love to hear from you
               </h2>
               <p className="mt-4 text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
@@ -657,9 +639,7 @@ export default function LandingPage({ onEnterApp }) {
                     </motion.div>
                   )}
                 </AnimatePresence>
-                <button type="submit"
-                  className="flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition hover:opacity-90"
-                  style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', boxShadow: '0 4px 20px rgba(139,92,246,0.3)' }}>
+                <button type="submit" className="btn-insane py-4 w-full flex items-center justify-center gap-2">
                   Send message <ArrowRight size={14} />
                 </button>
               </form>
@@ -675,15 +655,13 @@ export default function LandingPage({ onEnterApp }) {
           style={{ background: 'rgba(139,92,246,0.07)', borderColor: 'rgba(139,92,246,0.2)' }}>
           <GradientOrb style={{ width: 300, height: 300, top: -100, left: '50%', transform: 'translateX(-50%)', background: 'rgba(139,92,246,0.15)' }} />
           <div className="relative">
-            <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', letterSpacing: '-0.02em' }}>
+            <h2 className="glow-text" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', letterSpacing: '-0.02em' }}>
               Start thinking smarter today
             </h2>
             <p className="mt-4 text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
               Free forever. No credit card. Up and running in 30 seconds.
             </p>
-            <button onClick={handleCTA}
-              className="mt-8 inline-flex items-center gap-2 rounded-2xl px-8 py-3.5 text-base font-semibold text-white transition hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', boxShadow: '0 8px 32px rgba(139,92,246,0.4)' }}>
+            <button onClick={handleCTA} className="btn-insane mt-8 px-10 py-4 text-lg flex items-center justify-center gap-2 mx-auto">
               {user ? 'Open App' : 'Get started free'} <ArrowRight size={16} />
             </button>
           </div>
@@ -697,25 +675,26 @@ export default function LandingPage({ onEnterApp }) {
             <div className="flex items-center gap-2.5">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg text-base"
                 style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>⚡</div>
-              <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, letterSpacing: '-0.01em', fontSize: '0.95rem' }}>
+              <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, letterSpacing: '-0.01em', fontSize: '1.2rem' }}>
                 EduLens<span style={{ color: '#8b5cf6' }}>_AI</span>
               </span>
             </div>
             <div className="flex items-center gap-6 flex-wrap justify-center">
               {NAV_LINKS.map(l => (
                 <button key={l.label} onClick={() => scrollTo(l.href)}
-                  className="text-xs transition-colors hover:text-white"
-                  style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  className="text-xs transition-colors hover:text-[var(--text-1)]"
+                  style={{ color: 'var(--text-3)' }}>
                   {l.label}
                 </button>
               ))}
             </div>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>
+            <p className="text-xs" style={{ color: 'var(--text-3)', opacity: 0.8 }}>
               © 2025 EduLens AI. All rights reserved.
             </p>
           </div>
         </div>
       </footer>
+      </div>
     </div>
   )
 }

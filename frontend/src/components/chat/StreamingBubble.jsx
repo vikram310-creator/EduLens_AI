@@ -20,7 +20,7 @@ export default function StreamingBubble({ content }) {
           transition={{ repeat: Infinity, duration: 2.5, ease: 'linear' }}
           className="absolute inset-0 rounded-xl border border-violet-500/40 border-t-violet-400"
         />
-        <div className="flex h-6 w-6 items-center justify-center rounded-[10px] border border-white/8 bg-[#13131e]">
+        <div className="flex h-6 w-6 items-center justify-center rounded-[10px] border border-theme" style={{ background: 'var(--surface-3)' }}>
           <Zap size={12} className="text-violet-400" />
         </div>
       </div>
@@ -32,9 +32,30 @@ export default function StreamingBubble({ content }) {
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                code({ node, inline, className, children, ...props }) {
+                code({ node, className, children, ...props }) {
                   const language = className?.replace('language-', '') || 'text'
-                  if (inline) return <code className={className} {...props}>{children}</code>
+                  const isInline = !node?.properties?.className && 
+                    node?.position?.start?.line === node?.position?.end?.line &&
+                    !/\n/.test(String(children))
+                  if (isInline) {
+                    return (
+                      <code
+                        style={{
+                          background: 'rgba(139, 92, 246, 0.15)',
+                          color: '#c4b5fd',
+                          padding: '0.15em 0.45em',
+                          borderRadius: '6px',
+                          fontSize: '0.88em',
+                          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                          border: '1px solid rgba(139, 92, 246, 0.2)',
+                          fontWeight: 500,
+                        }}
+                        {...props}
+                      >
+                        {children}
+                      </code>
+                    )
+                  }
                   const rawLang = language.toLowerCase()
                   const sbMeta = {
                     python: { color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', label: 'Python' },
@@ -48,9 +69,9 @@ export default function StreamingBubble({ content }) {
                   }[rawLang] || { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', label: rawLang.toUpperCase() }
                   return (
                     <div className="my-4 overflow-hidden rounded-2xl shadow-2xl shadow-black/60"
-                         style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'var(--surface-2)' }}>
+                         style={{ border: '1px solid var(--border)', background: 'var(--surface-2)' }}>
                       <div className="flex items-center gap-3 px-4 py-2.5"
-                           style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                           style={{ background: 'var(--surface-3)', borderBottom: '1px solid var(--border)' }}>
                         <div className="flex gap-1.5">
                           <div className="h-2.5 w-2.5 rounded-full" style={{ background: '#ff5f57' }} />
                           <div className="h-2.5 w-2.5 rounded-full" style={{ background: '#febc2e' }} />

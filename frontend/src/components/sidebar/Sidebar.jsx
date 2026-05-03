@@ -60,10 +60,11 @@ export default function Sidebar({ onNavigate, onBackToLanding, onAbout }) {
     <motion.aside
       animate={{ width: collapsed ? 56 : 268 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="relative z-10 flex h-full flex-shrink-0 flex-col overflow-hidden"
+      className="relative z-10 flex h-full flex-shrink-0 flex-col"
       style={{
-        background: 'linear-gradient(180deg,var(--surface-2) 0%,var(--surface) 100%)',
+        background: 'var(--surface)',
         borderRight: '1px solid var(--border)',
+        boxShadow: '4px 0 24px rgba(0,0,0,0.02)',
       }}
     >
       {/* Header */}
@@ -99,7 +100,7 @@ export default function Sidebar({ onNavigate, onBackToLanding, onAbout }) {
         <motion.button
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           onClick={handleNewChat}
-          className={`flex w-full items-center rounded-xl border border-violet-500/25 bg-gradient-to-r from-violet-600/20 to-indigo-600/15 px-3 py-2.5 text-violet-400 transition hover:from-violet-600/30 hover:to-indigo-600/25 ${collapsed ? 'justify-center' : 'gap-2.5'}`}
+          className={`btn-insane flex w-full items-center px-3 py-2.5 text-white transition ${collapsed ? 'justify-center' : 'gap-2.5'}`}
         >
           <Plus size={14} strokeWidth={2.5} />
           <AnimatePresence>
@@ -122,7 +123,7 @@ export default function Sidebar({ onNavigate, onBackToLanding, onAbout }) {
             initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
             className="px-2.5 pb-2"
           >
-            <div className="flex items-center gap-2 rounded-xl border border-white/6 bg-white/[0.03] px-3 py-2">
+            <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ border: '1px solid var(--border)', background: 'var(--surface-3)' }}>
               <Search size={12} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
               <input
                 ref={searchRef}

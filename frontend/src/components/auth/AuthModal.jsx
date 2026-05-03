@@ -67,7 +67,7 @@ export default function AuthModal() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 24 }}
           transition={{ type: 'spring', stiffness: 340, damping: 28 }}
-          className="auth-card relative w-full max-w-sm rounded-2xl overflow-hidden"
+          className="insane-card relative w-full max-w-sm p-[1px] rounded-[2rem] overflow-hidden"
           onClick={e => e.stopPropagation()}
         >
           {/* Ambient glow */}
@@ -88,10 +88,10 @@ export default function AuthModal() {
                 ⚡
               </div>
               <div className="text-center">
-                <h2 className="auth-title text-lg font-bold">
+                <h2 className="glow-text text-2xl font-800" style={{ fontFamily: "'Outfit', sans-serif" }}>
                   {mode === 'login' ? 'Welcome back' : 'Create account'}
                 </h2>
-                <p className="auth-subtitle mt-0.5 text-xs">
+                <p className="mt-1 text-sm" style={{ color: 'var(--text-3)' }}>
                   {mode === 'login' ? 'Sign in to access your chats' : 'Join EduLens AI today'}
                 </p>
               </div>
@@ -99,7 +99,7 @@ export default function AuthModal() {
 
             {/* Google */}
             <button onClick={handleGoogleClick} disabled={googleLoading || loading}
-              className="auth-btn-secondary flex w-full items-center justify-center gap-2.5 rounded-xl py-2.5 text-sm font-medium transition mb-4 disabled:opacity-50 disabled:cursor-not-allowed">
+              className="btn-glass flex w-full items-center justify-center gap-2.5 rounded-xl py-3 text-sm font-semibold transition mb-4 disabled:opacity-50 disabled:cursor-not-allowed">
               {googleLoading ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
               Continue with Google
             </button>
@@ -107,7 +107,7 @@ export default function AuthModal() {
             {/* Divider */}
             <div className="flex items-center gap-3 mb-4">
               <div className="flex-1 h-px auth-divider" />
-              <span className="auth-subtitle text-[11px] font-medium">or continue with email</span>
+              <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>or continue with email</span>
               <div className="flex-1 h-px auth-divider" />
             </div>
 
@@ -143,7 +143,7 @@ export default function AuthModal() {
               </div>
 
               <button type="submit" disabled={loading || googleLoading}
-                className="auth-btn-primary flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-white transition active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed mt-1">
+                className="btn-insane flex w-full items-center justify-center gap-2 py-3.5 text-base font-semibold text-white mt-2 disabled:opacity-60 disabled:cursor-not-allowed">
                 {loading && <Loader2 size={14} className="animate-spin" />}
                 {mode === 'login' ? 'Sign in' : 'Create account'}
               </button>
@@ -151,7 +151,7 @@ export default function AuthModal() {
 
             <p className="auth-subtitle mt-4 text-center text-xs">
               {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-              <button onClick={switchMode} className="auth-link font-medium transition">
+              <button onClick={switchMode} className="font-semibold text-violet-400 hover:text-violet-300 transition">
                 {mode === 'login' ? 'Sign up' : 'Sign in'}
               </button>
             </p>

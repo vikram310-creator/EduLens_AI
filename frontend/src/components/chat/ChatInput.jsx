@@ -47,18 +47,10 @@ function ModelDropdown({ model, setModel, onClose }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 6, scale: 0.97 }}
       transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-      className="absolute bottom-full left-0 mb-2 z-50 w-64"
-      style={{
-        background: 'rgba(13,13,22,0.98)',
-        border: '1px solid rgba(255,255,255,0.09)',
-        borderRadius: '16px',
-        boxShadow: '0 24px 48px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03)',
-        backdropFilter: 'blur(24px)',
-        overflow: 'hidden',
-      }}
+      className="absolute bottom-full left-0 mb-2 z-50 w-64 insane-card overflow-hidden"
     >
       <div className="px-3.5 pt-3 pb-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.25)' }}>
+        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>
           Select Model
         </span>
       </div>
@@ -86,23 +78,23 @@ function ModelDropdown({ model, setModel, onClose }) {
                   border: '1px solid ' + (active ? m.colorBorder : 'rgba(255,255,255,0.08)'),
                 }}
               >
-                <Icon size={13} style={{ color: active ? m.color : 'rgba(255,255,255,0.35)' }} />
+                <Icon size={13} style={{ color: active ? m.color : 'var(--text-3)' }} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold" style={{ color: active ? m.color : 'rgba(255,255,255,0.8)' }}>
+                  <span className="text-xs font-semibold" style={{ color: active ? m.color : 'var(--text-1)' }}>
                     {m.label}
                   </span>
                   <span
                     className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
                     style={{
-                      background: active ? m.colorSoft : 'rgba(255,255,255,0.06)',
-                      color: active ? m.color : 'rgba(255,255,255,0.3)',
+                      background: active ? m.colorSoft : 'rgba(128,128,128,0.1)',
+                      color: active ? m.color : 'var(--text-3)',
                       border: '1px solid ' + (active ? m.colorBorder : 'transparent'),
                     }}
                   >{m.tag}</span>
                 </div>
-                <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{m.sublabel}</span>
+                <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>{m.sublabel}</span>
               </div>
               {active && (
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
@@ -233,11 +225,11 @@ export default function ChatInput() {
     ? '0 0 0 1.5px rgba(239,68,68,0.5), 0 8px 40px rgba(239,68,68,0.1)'
     : (hasInput || attachedImages.length > 0)
       ? '0 0 0 1.5px ' + currentModel.colorBorder + ', 0 8px 40px rgba(0,0,0,0.35)'
-      : '0 0 0 1px rgba(255,255,255,0.07), 0 4px 24px rgba(0,0,0,0.4)'
+      : '0 0 0 1px var(--border-strong), 0 4px 24px var(--shadow)'
 
   return (
     <div className="px-4 pb-5 pt-2 mobile-safe-bottom">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-4xl">
 
         {/* Attached images */}
         <AnimatePresence>
@@ -260,7 +252,7 @@ export default function ChatInput() {
                   >
                     <div
                       className="relative overflow-hidden rounded-2xl shadow-xl"
-                      style={{ width: '80px', height: '64px', border: '1px solid rgba(255,255,255,0.1)', background: '#0e0e18' }}
+                      style={{ width: '80px', height: '64px', border: '1px solid var(--border)', background: 'var(--surface-3)' }}
                     >
                       <img src={img.dataUrl} alt={img.name}
                         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
@@ -275,9 +267,9 @@ export default function ChatInput() {
                     <button
                       onClick={() => removeImage(img.id)}
                       className="absolute -top-2 -right-2 flex items-center justify-center rounded-full transition-all"
-                      style={{ width: '20px', height: '20px', background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.45)' }}
+                      style={{ width: '20px', height: '20px', background: 'var(--surface-4)', border: '1px solid var(--border)', color: 'var(--text-3)' }}
                       onMouseEnter={e => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = 'white' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = '#1c1c2e'; e.currentTarget.style.color = 'rgba(255,255,255,0.45)' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-4)'; e.currentTarget.style.color = 'var(--text-3)' }}
                     ><X size={10} /></button>
                   </motion.div>
                 ))}
@@ -290,12 +282,7 @@ export default function ChatInput() {
         <motion.div
           animate={{ boxShadow }}
           transition={{ duration: 0.2 }}
-          className="relative rounded-2xl"
-          style={{
-            background: 'rgba(14,14,24,0.95)',
-            border: '1px solid rgba(255,255,255,0.07)',
-            backdropFilter: 'blur(20px)',
-          }}
+          className="relative insane-card"
         >
           <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
 
@@ -309,10 +296,10 @@ export default function ChatInput() {
               placeholder={placeholder}
               rows={1}
               disabled={isStreaming || isProcessing}
-              className="w-full resize-none bg-transparent text-sm outline-none placeholder:text-white/20"
+              className="w-full resize-none bg-transparent text-sm outline-none"
               style={{
                 minHeight: '28px', maxHeight: '180px', lineHeight: '1.6',
-                color: (!isWhisper && !isDetecting && isListening && interimText) ? 'rgba(196,181,253,0.7)' : 'rgba(255,255,255,0.88)',
+                color: (!isWhisper && !isDetecting && isListening && interimText) ? 'var(--accent)' : 'var(--text-1)',
                 caretColor: currentModel.color,
               }}
             />
@@ -345,12 +332,12 @@ export default function ChatInput() {
                   onClick={() => setModelOpen(o => !o)}
                   className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-all"
                   style={{
-                    background: modelOpen ? currentModel.colorSoft : 'rgba(255,255,255,0.05)',
-                    border: '1px solid ' + (modelOpen ? currentModel.colorBorder : 'rgba(255,255,255,0.08)'),
-                    color: modelOpen ? currentModel.color : 'rgba(255,255,255,0.5)',
+                    background: modelOpen ? currentModel.colorSoft : 'transparent',
+                    border: '1px solid ' + (modelOpen ? currentModel.colorBorder : 'transparent'),
+                    color: modelOpen ? currentModel.color : 'var(--text-2)',
                   }}
                 >
-                  <ModelIcon size={11} style={{ color: modelOpen ? currentModel.color : 'rgba(255,255,255,0.4)' }} />
+                  <ModelIcon size={11} style={{ color: modelOpen ? currentModel.color : 'var(--text-3)' }} />
                   <span style={{ maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {currentModel.label}
                   </span>
@@ -377,7 +364,7 @@ export default function ChatInput() {
                 style={{
                   background: attachedImages.length > 0 ? 'rgba(96,165,250,0.12)' : 'transparent',
                   border: '1px solid ' + (attachedImages.length > 0 ? 'rgba(96,165,250,0.3)' : 'transparent'),
-                  color: attachedImages.length > 0 ? '#60a5fa' : 'rgba(255,255,255,0.28)',
+                  color: attachedImages.length > 0 ? '#60a5fa' : 'var(--text-3)',
                 }}
               >
                 <Paperclip size={13} />
@@ -394,7 +381,7 @@ export default function ChatInput() {
             <div className="flex items-center gap-1.5">
               {input.length > 80 && (
                 <span className="text-[10px] tabular-nums mr-1"
-                  style={{ color: input.length > 3000 ? '#f87171' : 'rgba(255,255,255,0.2)' }}>
+                  style={{ color: input.length > 3000 ? '#f87171' : 'var(--text-3)' }}>
                   {input.length}
                 </span>
               )}
@@ -409,7 +396,7 @@ export default function ChatInput() {
                 style={{
                   background: micActive ? 'rgba(239,68,68,0.12)' : 'transparent',
                   border: '1px solid ' + (micActive ? 'rgba(239,68,68,0.3)' : 'transparent'),
-                  color: micActive ? '#f87171' : isDetecting ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.28)',
+                  color: micActive ? '#f87171' : isDetecting ? 'var(--text-3)' : 'var(--text-2)',
                   cursor: micDisabled ? 'not-allowed' : 'pointer',
                   opacity: micDisabled && !micActive ? 0.5 : 1,
                 }}
@@ -420,8 +407,8 @@ export default function ChatInput() {
                       <Square size={11} fill="currentColor" />
                     </motion.div>
                   ) : isProcessing ? <Loader2 size={13} className="animate-spin" />
-                  : supported ? <Mic size={13} />
-                  : <MicOff size={13} className="opacity-40" />
+                    : supported ? <Mic size={13} />
+                      : <MicOff size={13} className="opacity-40" />
                 }
               </motion.button>
 
@@ -437,8 +424,8 @@ export default function ChatInput() {
                   boxShadow: '0 4px 16px ' + currentModel.color + '33',
                   color: 'white',
                 } : {
-                  background: 'rgba(255,255,255,0.05)',
-                  color: 'rgba(255,255,255,0.15)',
+                  background: 'var(--surface-3)',
+                  color: 'var(--text-3)',
                   cursor: 'not-allowed',
                 }}
               >
@@ -458,16 +445,10 @@ export default function ChatInput() {
         </motion.div>
 
         {/* Footer */}
-        <div className="mt-2 flex items-center justify-center gap-2">
-          <p className="text-center text-[10.5px]" style={{ color: 'rgba(255,255,255,0.18)' }}>
-            EduLens AI may produce inaccurate responses. Verify important information.
+        <div className="mt-2.5 flex items-center justify-center">
+          <p className="text-center text-[11.5px] tracking-wide" style={{ color: 'var(--text-3)', letterSpacing: '0.02em' }}>
+            ⚠️ EduLens AI may produce inaccurate responses — always verify important information.
           </p>
-          {!isDetecting && isWhisper && (
-            <span className="shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-semibold"
-              style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.2)' }}>
-              Whisper
-            </span>
-          )}
         </div>
       </div>
     </div>
