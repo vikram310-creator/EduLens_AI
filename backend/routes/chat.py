@@ -93,8 +93,12 @@ async def chat_stream(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    # Save user message
-    user_msg = Message(session_id=session.id, role="user", content=req.message)
+    # Save user message (including any attached images as JSON)
+    import json as _json
+    images_data = None
+    if req.images:
+        images_data = _json.dumps([{"data_url": img.data_url, "media_type": img.media_type} for img in req.images])
+    user_msg = Message(session_id=session.id, role="user", content=req.message, images_json=images_data)
     db.add(user_msg)
     db.commit()
 
@@ -226,6 +230,15 @@ def get_messages(
         .order_by(Message.created_at)
         .all()
     )
+    import json as _json
+    def parse_images(images_json):
+        if not images_json:
+            return []
+        try:
+            return _json.loads(images_json)
+        except Exception:
+            return []
+
     return [
         {
             "id": m.id,
@@ -233,6 +246,7 @@ def get_messages(
             "content": m.content,
             "token_count": m.token_count,
             "created_at": m.created_at.isoformat(),
+            "images": parse_images(m.images_json),
         }
         for m in messages
     ]
