@@ -37,5 +37,6 @@ class Message(Base):
     role        = Column(String, nullable=False)
     content     = Column(Text, nullable=False)
     token_count = Column(Integer, default=0)
+    images_json = Column(Text, nullable=True, default=None)  # JSON array of {data_url, media_type, name}
     created_at  = Column(DateTime, default=datetime.utcnow)
     session     = relationship("Session", back_populates="messages")
