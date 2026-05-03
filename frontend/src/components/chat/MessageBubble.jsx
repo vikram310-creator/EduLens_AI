@@ -168,10 +168,10 @@ export default function MessageBubble({ message, index }) {
                     key={i}
                     className="group relative overflow-hidden cursor-zoom-in"
                     style={{ borderRadius: '10px', aspectRatio: '4/3' }}
-                    onClick={() => setLightbox({ src: img.dataUrl || img, name: img.name || `Image ${i+1}` })}
+                    onClick={() => setLightbox({ src: img.dataUrl || img.data_url || img, name: img.name || `Image ${i+1}` })}
                   >
                     <img
-                      src={img.dataUrl || img} alt={img.name || `image ${i+1}`}
+                      src={img.dataUrl || img.data_url || img} alt={img.name || `image ${i+1}`}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                       className="transition-transform duration-200 group-hover:scale-105"
                     />
