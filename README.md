@@ -2,7 +2,7 @@
 
 A production-ready AI chatbot with **authentication**, **persistent chat history**, **Google OAuth**, and **theme switching** — powered by Groq API with real-time streaming, glassmorphism UI, and multi-session management.
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-edulens-ai7.netlify.app-8b5cf6?style=flat-square&logo=netlify)](https://edulensai7.netlify.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-edulens--ai7.netlify.app-8b5cf6?style=flat-square&logo=netlify)](https://edulensai7.netlify.app)
 [![Backend](https://img.shields.io/badge/API-Render-06b6d4?style=flat-square&logo=render)](https://edulens-ai-1.onrender.com)
 [![License](https://img.shields.io/badge/License-MIT-10b981?style=flat-square)](LICENSE)
 
