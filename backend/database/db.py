@@ -12,6 +12,16 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    # ── Safe migration: add images_json column if it doesn't exist yet ──────────
+    # This handles existing databases that were created before this column was added.
+    try:
+        with engine.connect() as conn:
+            conn.execute(__import__("sqlalchemy").text(
+                "ALTER TABLE messages ADD COLUMN images_json TEXT"
+            ))
+            conn.commit()
+    except Exception:
+        pass  # Column already exists — safe to ignore
 
 def get_db():
     db = SessionLocal()
