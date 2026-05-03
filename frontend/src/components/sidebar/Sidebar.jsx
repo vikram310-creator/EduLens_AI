@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, MessageSquare, Trash2, Pencil, Check, X, Download, ChevronLeft, ChevronRight, Zap, Cpu, Search } from 'lucide-react'
+import { Plus, MessageSquare, Trash2, Pencil, Check, X, Download, ChevronLeft, ChevronRight, Zap, Search } from 'lucide-react'
 import { useChatStore } from '../../store/chatStore'
 import { useAuth } from '../../context/AuthContext'
 import ProfileDropdown from '../auth/ProfileDropdown'
@@ -9,7 +9,7 @@ export default function Sidebar({ onNavigate, onBackToLanding, onAbout }) {
   const {
     sessions, activeSessionId, createSession,
     setActiveSession, renameSession, deleteSession,
-    exportChat, model, setModel,
+    exportChat,
   } = useChatStore()
   const { user } = useAuth()
 
@@ -20,11 +20,6 @@ export default function Sidebar({ onNavigate, onBackToLanding, onAbout }) {
   const [search,     setSearch]     = useState('')
   const searchRef = useRef(null)
 
-  const MODELS = [
-    { value: 'llama-3.1-8b-instant',                      label: 'LLaMA 3.1 8B',  tag: 'Fast'   },
-    { value: 'llama-3.3-70b-versatile',                   label: 'LLaMA 3.3 70B', tag: 'Smart'  },
-    { value: 'meta-llama/llama-4-scout-17b-16e-instruct', label: 'Llama 4 Scout', tag: 'Vision' },
-  ]
 
   const PERSONA_ICONS = {
     assistant: { icon: '✦', cls: 'text-violet-400 bg-violet-500/12 ring-violet-500/20' },
@@ -286,42 +281,6 @@ export default function Sidebar({ onNavigate, onBackToLanding, onAbout }) {
             className="p-3 flex flex-col gap-3"
             style={{ borderTop: '1px solid var(--border)' }}
           >
-            {/* Model picker */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-1.5 px-0.5">
-                <Cpu size={10} style={{ color: 'var(--text-3)' }} />
-                <span className="text-[10px] font-600 uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Model</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                {MODELS.map((m) => {
-                  const active = model === m.value
-                  return (
-                    <button
-                      key={m.value}
-                      onClick={() => setModel(m.value)}
-                      className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-left transition-all"
-                      style={{
-                        background: active ? 'var(--accent-soft)' : 'transparent',
-                        border: active ? '1px solid rgba(139,92,246,0.3)' : '1px solid transparent',
-                        color: active ? 'var(--accent)' : 'var(--text-3)',
-                      }}
-                    >
-                      <span className="text-xs">{m.label}</span>
-                      <span
-                        className="text-[9px] font-600 px-1.5 py-0.5 rounded-full"
-                        style={{
-                          background: active ? 'var(--accent-soft)' : 'var(--surface-4)',
-                          color: active ? 'var(--accent)' : 'var(--text-3)',
-                        }}
-                      >
-                        {m.tag}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
             {/* Export */}
             {activeSessionId && (
               <button
