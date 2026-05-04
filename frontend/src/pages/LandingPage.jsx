@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import CosmicBackground from '../components/landing/CosmicBackground'
+import GooeyNav from '../components/landing/GooeyNav'
 import {
   Zap, MessageSquare, Shield, Cpu, BookOpen, PenTool, BarChart2,
   ChevronRight, Star, Check, Mail, Twitter, Github, Menu, X,
@@ -177,14 +178,8 @@ export default function LandingPage({ onEnterApp }) {
           </button>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-6">
-            {NAV_LINKS.map(l => (
-              <button key={l.label} onClick={() => scrollTo(l.href)}
-                className="text-sm transition-colors hover:text-white"
-                style={{ color: 'rgba(255,255,255,0.45)' }}>
-                {l.label}
-              </button>
-            ))}
+          <div className="hidden md:flex items-center">
+            <GooeyNav items={NAV_LINKS} onItemClick={scrollTo} />
           </div>
 
           {/* CTA */}

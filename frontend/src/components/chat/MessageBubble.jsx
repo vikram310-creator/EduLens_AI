@@ -190,31 +190,55 @@ export default function MessageBubble({ message, index }) {
             {/* Images */}
             {message.images && message.images.length > 0 && (
               <div
-                className={`p-2 ${message.images.length > 1 ? 'grid grid-cols-2 gap-1.5' : ''}`}
-                style={{ background: 'rgba(99,60,180,0.18)' }}
+                className={`p-1.5 ${message.images.length > 1 ? 'grid grid-cols-2 gap-1.5' : 'flex flex-col'}`}
+                style={{
+                  background: message.images.length > 1 ? 'rgba(0,0,0,0.15)' : 'transparent',
+                  borderRadius: '16px'
+                }}
               >
-                {message.images.map((img, i) => (
-                  <div
-                    key={i}
-                    className="group relative overflow-hidden cursor-zoom-in"
-                    style={{ borderRadius: '10px', aspectRatio: '4/3' }}
-                    onClick={() => setLightbox({ src: img.dataUrl || img.data_url || img, name: img.name || `Image ${i + 1}` })}
-                  >
-                    <img
-                      src={img.dataUrl || img.data_url || img} alt={img.name || `image ${i + 1}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                      className="transition-transform duration-200 group-hover:scale-105"
-                    />
+                {message.images.map((img, i) => {
+                  const isSingle = message.images.length === 1;
+                  return (
                     <div
-                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{ background: 'rgba(0,0,0,0.35)', borderRadius: '10px' }}
+                      key={i}
+                      className="group relative overflow-hidden cursor-zoom-in"
+                      style={{
+                        borderRadius: isSingle ? '14px' : '10px',
+                        aspectRatio: isSingle ? 'auto' : '1',
+                        maxHeight: isSingle ? '460px' : 'auto',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+                        background: isSingle ? 'transparent' : 'var(--surface-3)',
+                      }}
+                      onClick={() => setLightbox({ src: img.dataUrl || img.data_url || img, name: img.name || `Image ${i + 1}` })}
                     >
-                      <div className="flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm" style={{ width: '36px', height: '36px' }}>
-                        <ZoomIn size={16} className="text-white" />
+                      <img
+                        src={img.dataUrl || img.data_url || img} alt={img.name || `image ${i + 1}`}
+                        style={{
+                          width: isSingle ? 'auto' : '100%',
+                          height: isSingle ? 'auto' : '100%',
+                          maxWidth: '100%',
+                          maxHeight: isSingle ? '460px' : '100%',
+                          objectFit: isSingle ? 'contain' : 'cover',
+                          display: 'block',
+                          margin: isSingle ? '0' : 'auto',
+                        }}
+                        className="transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                      />
+                      <div
+                        className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out"
+                        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 100%)' }}
+                      >
+                        <div
+                          className="flex items-center justify-center rounded-full bg-black/50 backdrop-blur-md border border-white/20 shadow-2xl transform translate-y-3 group-hover:translate-y-0 transition-transform duration-300 ease-out"
+                          style={{ width: '44px', height: '44px' }}
+                        >
+                          <ZoomIn size={20} className="text-white/90" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 

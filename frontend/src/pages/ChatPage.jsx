@@ -61,14 +61,24 @@ export default function ChatPage({ onMenuOpen }) {
   const welcome = PERSONA_WELCOME[personaId] || PERSONA_WELCOME.assistant
   const suggestions = PERSONA_SUGGESTIONS[personaId] || PERSONA_SUGGESTIONS.assistant
 
+  const isNearBottomRef = useRef(true)
+  const prevMessagesLength = useRef(messages.length)
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const isNewMessage = messages.length > prevMessagesLength.current
+    prevMessagesLength.current = messages.length
+
+    if (isNearBottomRef.current || isNewMessage) {
+      bottomRef.current?.scrollIntoView({ behavior: isNewMessage ? 'smooth' : 'auto' })
+    }
   }, [messages, streamingContent])
 
   const handleScroll = () => {
     const el = scrollRef.current
     if (!el) return
-    setShowJump(el.scrollHeight - el.scrollTop - el.clientHeight > 200)
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+    isNearBottomRef.current = distanceFromBottom < 150
+    setShowJump(distanceFromBottom > 200)
   }
 
   return (
