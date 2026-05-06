@@ -34,12 +34,12 @@ A production-ready AI chatbot with **authentication**, **persistent chat history
 │  └────────────┘  └──────────────┘  └─────────────────────┘  │
 │                                                             │
 │         ┌─────────────────────────────────────┐             │
-│         │       SQLAlchemy + SQLite            │            │
-│         │   Users · Sessions · Messages        │            │
+│         │       SQLAlchemy + SQLite           │             │
+│         │   Users · Sessions · Messages       │             │
 │         └──────────────────┬──────────────────┘             │
 │                            │                                │
 │         ┌──────────────────▼──────────────────┐             │
-│         │           Groq Python SDK            │            │
+│         │           Groq Python SDK           │             │
 │         └─────────────────────────────────────┘             │
 └─────────────────────────────────────────────────────────────┘
                              │
