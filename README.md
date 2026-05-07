@@ -58,37 +58,37 @@ A production-ready AI chatbot with authentication, persistent chat history, Goog
 ┌─────────────────────────────────────────────────────────────┐
 │                      Browser (React)                        │
 │                                                             │
-│  ┌─────────────┐  ┌───────────────┐  ┌──────────────────┐  │
-│  │   Sidebar   │  │  Chat Window  │  │    ChatInput     │  │
-│  │ (Sessions)  │  │  (Messages)   │  │ (Voice / Send)   │  │
-│  └─────────────┘  └───────────────┘  └──────────────────┘  │
+│  ┌─────────────┐  ┌───────────────┐  ┌──────────────────┐   │
+│  │   Sidebar   │  │  Chat Window  │  │    ChatInput     │   │
+│  │ (Sessions)  │  │  (Messages)   │  │ (Voice / Send)   │   │
+│  └─────────────┘  └───────────────┘  └──────────────────┘   │
 │                                                             │
-│  ┌──────────────────┐   ┌──────────────────────────────┐   │
-│  │  AuthContext     │   │       Zustand Store          │   │
-│  │  (JWT + Cache)   │   │   (Sessions / Messages)      │   │
-│  └──────────────────┘   └──────────────────────────────┘   │
+│  ┌──────────────────┐   ┌──────────────────────────────┐    │
+│  │  AuthContext     │   │       Zustand Store          │    │
+│  │  (JWT + Cache)   │   │   (Sessions / Messages)      │    │
+│  └──────────────────┘   └──────────────────────────────┘    │
 └──────────────────────────────┬──────────────────────────────┘
                                │ HTTP / SSE
 ┌──────────────────────────────▼──────────────────────────────┐
-│                  FastAPI Backend (Python)                    │
+│                  FastAPI Backend (Python)                   │
 │                                                             │
-│  ┌────────────┐  ┌──────────────┐  ┌─────────────────────┐ │
-│  │  /auth/*   │  │  /sessions   │  │   /chat/stream      │ │
-│  │ JWT + OAuth│  │  CRUD (auth) │  │   SSE streaming     │ │
-│  └────────────┘  └──────────────┘  └─────────────────────┘ │
+│  ┌────────────┐  ┌──────────────┐  ┌─────────────────────┐  │
+│  │  /auth/*   │  │  /sessions   │  │   /chat/stream      │  │
+│  │ JWT + OAuth│  │  CRUD (auth) │  │   SSE streaming     │  │
+│  └────────────┘  └──────────────┘  └─────────────────────┘  │
 │                                                             │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │              /transcribe  (Groq Whisper)              │   │
+│  │              /transcribe  (Groq Whisper)             │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                             │
-│         ┌─────────────────────────────────────┐            │
-│         │    SQLAlchemy + SQLite               │            │
-│         │    Users · Sessions · Messages       │            │
-│         └──────────────────┬──────────────────┘            │
-│                            │                               │
-│         ┌──────────────────▼──────────────────┐            │
-│         │         Groq Python SDK              │            │
-│         └─────────────────────────────────────┘            │
+│         ┌─────────────────────────────────────┐             │
+│         │    SQLAlchemy + SQLite              │             │
+│         │    Users · Sessions · Messages      │             │
+│         └──────────────────┬──────────────────┘             │
+│                            │                                │
+│         ┌──────────────────▼──────────────────┐             │
+│         │         Groq Python SDK             │             │
+│         └─────────────────────────────────────┘             │
 └─────────────────────────────────────────────────────────────┘
                              │
                         Groq Cloud API
@@ -179,154 +179,6 @@ EduLens_AI/
                 ├── MessageBubble.jsx    # Markdown renderer, copy, image display
                 ├── StreamingBubble.jsx  # Live-updating bubble during SSE stream
                 └── TypingIndicator.jsx  # Animated dots while awaiting first token
-```
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Python 3.11+
-- Node.js 18+
-- A [Groq API key](https://console.groq.com)
-
-### 1. Clone the repo
-
-```bash
-git clone https://github.com/your-username/EduLens_AI.git
-cd EduLens_AI
-```
-
-### 2. Backend setup
-
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-Create `backend/.env`:
-
-```env
-GROQ_API_KEY=gsk_...
-JWT_SECRET=...                  # python -c "import secrets; print(secrets.token_hex(32))"
-GOOGLE_CLIENT_ID=...            # optional
-GOOGLE_CLIENT_SECRET=...        # optional
-GOOGLE_REDIRECT_URI=http://localhost:5173/auth/google/callback
-```
-
-```bash
-uvicorn main:app --reload --port 8000
-```
-
-### 3. Frontend setup
-
-```bash
-cd frontend
-npm install
-```
-
-Create `frontend/.env`:
-
-```env
-VITE_API_URL=http://localhost:8000
-```
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:5173](http://localhost:5173) — you're live.
-
----
-
-## ☁️ Deployment
-
-### Backend — Render
-
-1. Connect your repo as a **Web Service**
-2. **Build Command:** `pip install -r requirements.txt`
-3. **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
-4. Add all env vars in the **Environment** tab
-
-> **⚠️ Note:** Render's free tier has an ephemeral filesystem — SQLite data is lost on redeploy. For production, migrate to PostgreSQL by updating `db.py` to use `create_engine(os.environ["DATABASE_URL"])`.
-
-### Frontend — Netlify
-
-1. Connect your repo; set **Base directory** to `frontend`
-2. **Build Command:** `npm run build`
-3. **Publish Directory:** `dist`
-4. The included `netlify.toml` handles SPA routing rewrites automatically
-
----
-
-## 🔑 API Reference
-
-### Public (no token required)
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/auth/register` | Email/password registration |
-| `POST` | `/api/auth/login` | Email/password login |
-| `GET` | `/api/auth/google/url` | Get Google OAuth redirect URL |
-| `POST` | `/api/auth/google/callback` | Exchange OAuth code for JWT |
-| `POST` | `/api/transcribe` | Transcribe audio *(auth optional)* |
-
-### Protected (`Authorization: Bearer <token>`)
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/auth/me` | Get current user |
-| `PATCH` | `/api/auth/theme` | Update theme preference |
-| `PATCH` | `/api/auth/profile` | Update display name |
-| `GET` | `/api/sessions` | List all sessions |
-| `POST` | `/api/sessions` | Create a session |
-| `PATCH` | `/api/sessions/{id}` | Rename a session |
-| `DELETE` | `/api/sessions/{id}` | Delete a session |
-| `POST` | `/api/chat/stream` | Stream a chat response (SSE) |
-| `GET` | `/api/chat/{id}/messages` | Get all messages in a session |
-| `GET` | `/api/chat/{id}/export` | Export session as JSON |
-
----
-
-## 🔐 Google OAuth Setup *(optional)*
-
-1. Go to [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
-2. Create a project and enable the **People API**
-3. Create an **OAuth 2.0 Client ID** → Web application
-4. Add Authorised redirect URIs:
-   - `http://localhost:5173/auth/google/callback` *(dev)*
-   - `https://your-app.netlify.app/auth/google/callback` *(prod)*
-5. Copy Client ID and Secret into your backend `.env`
-
-> Email/password login works perfectly without Google OAuth.
-
----
-
-## 🗃️ Database Migration
-
-Upgrading from a version without authentication?
-
-**Option A — Fresh start *(recommended)*:** Delete `backend/groqchat.db`; `init_db()` recreates it on startup.
-
-**Option B — Preserve existing data:**
-
-```python
-# Run once from the backend/ directory
-from database.db import engine
-from sqlalchemy import text
-
-with engine.connect() as conn:
-    try:
-        conn.execute(text(
-            "ALTER TABLE sessions ADD COLUMN user_id VARCHAR REFERENCES users(id)"
-        ))
-        conn.commit()
-        print("Migration complete")
-    except Exception as e:
-        print(f"Already migrated or error: {e}")
 ```
 
 ---
